@@ -26,7 +26,12 @@ func main() {
 		}
 
 		for _, m := range messages {
-			fmt.Println(m)
+			response, err := m.MarshalText()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Printf("%s\n", response)
 		}
 	}
 
