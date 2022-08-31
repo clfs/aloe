@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"log"
 	"os"
 
@@ -11,9 +13,24 @@ import (
 func main() {
 	eng := engine.New()
 
-	adapter := uci.NewAdapter(eng, os.Stdin, os.Stdout)
+	adapter := uci.NewAdapter(eng)
 
-	if err := adapter.Run(); err != nil {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		messages, err := adapter.SendLine(line)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, m := range messages {
+			fmt.Println(m)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 }
