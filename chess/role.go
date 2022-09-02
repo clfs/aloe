@@ -1,5 +1,6 @@
 package chess
 
+// Role is the role of a piece.
 type Role int8
 
 const (

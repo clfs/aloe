@@ -1,7 +1,9 @@
 package chess
 
+// Rank is a rank on a chess board. Note that Rank1 = 0.
 type Rank int8
 
+// Board ranks.
 const (
 	Rank1 Rank = iota
 	Rank2

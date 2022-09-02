@@ -3,10 +3,13 @@ package chess
 // Square represents a square on a chess board.
 type Square int8
 
+// NoSquare is a sentinel value for the absence of a square. Calling Square
+// methods on NoSquare can return invalid results.
+const NoSquare Square = -1
+
+// Board squares.
 const (
-	// NoSquare is a sentinel value for the absence of a square.
-	NoSquare Square = iota - 1
-	A1
+	A1 Square = iota
 	B1
 	C1
 	D1

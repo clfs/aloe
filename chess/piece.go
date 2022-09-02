@@ -1,18 +1,26 @@
 package chess
 
+// Piece is a chess piece. Bits 0 to 2 represent the role, and bit 3 represents
+// the color.
 type Piece int8
 
+// NoPiece is a sentinel value for the absence of a piece. Calling Piece methods
+// on NoPiece can return invalid results.
+const NoPiece Piece = -1
+
+// White pieces.
 const (
-	NoPiece Piece = iota - 1
-	WhitePawn
+	WhitePawn Piece = iota
 	WhiteKnight
 	WhiteBishop
 	WhiteRook
 	WhiteQueen
 	WhiteKing
-	_
-	_
-	BlackPawn
+)
+
+// Black pieces.
+const (
+	BlackPawn Piece = 8 + iota
 	BlackKnight
 	BlackBishop
 	BlackRook
@@ -20,10 +28,12 @@ const (
 	BlackKing
 )
 
+// Color returns the color of the piece.
 func (p Piece) Color() Color {
 	return Color(p >> 3)
 }
 
+// Role returns the role of the piece.
 func (p Piece) Role() Role {
 	return Role(p & 7)
 }
