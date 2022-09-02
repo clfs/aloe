@@ -58,27 +58,25 @@ type RequestPosition struct {
 	Moves []string
 }
 
+const startPos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 func (req *RequestPosition) UnmarshalText(text []byte) error {
 	words := strings.Fields(string(text))
 	if len(words) < 2 {
 		return fmt.Errorf("invalid position command: %s", text)
 	}
 
-	switch words[1] {
-	default:
-		return fmt.Errorf("invalid position command: %s", text)
-	case "startpos":
-		req.FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-	case "fen":
-		if len(words) < 7 {
-			return fmt.Errorf("invalid position command: %s", text)
+	if words[1] == "startpos" {
+		req.FEN = startPos
+		if len(words) > 2 {
+			req.Moves = words[3:]
 		}
-		req.FEN = strings.Join(words[2:7], " ")
+		return nil
 	}
 
+	req.FEN = strings.Join(words[1:7], " ")
 	if len(words) > 7 {
-		req.Moves = words[7:]
+		req.Moves = words[8:]
 	}
-
 	return nil
 }
