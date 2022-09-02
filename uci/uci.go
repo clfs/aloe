@@ -12,8 +12,8 @@ func NewAdapter(e *engine.Engine) *Adapter {
 	return &Adapter{e}
 }
 
-func (a *Adapter) SendLine(line string) ([]Response, error) {
-	req, err := ToRequest(line)
+func (a *Adapter) SendLine(s string) ([]Response, error) {
+	req, err := toRequest(s)
 	if err != nil {
 		return nil, err
 	}
