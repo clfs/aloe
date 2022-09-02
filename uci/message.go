@@ -1,6 +1,7 @@
 package uci
 
 import (
+	"bytes"
 	"encoding"
 	"fmt"
 	"strings"
@@ -22,14 +23,22 @@ func (e ErrUnknownCommand) Error() string {
 	return fmt.Sprintf("unknown command: %s", e.Command)
 }
 
+type ErrCannotUnmarshal struct {
+	Text []byte
+}
+
+func (e ErrCannotUnmarshal) Error() string {
+	return fmt.Sprintf("cannot unmarshal: %s", e.Text)
+}
+
 type Message interface {
 	encoding.TextMarshaler
 	encoding.TextUnmarshaler
 	EngineBound() bool
 }
 
-// parse tries to parse a line into an engine-bound UCI message.
-func parse(line string) (Message, error) {
+// Parse tries to parse a line into an engine-bound UCI message.
+func Parse(line string) (Message, error) {
 	// Ignore empty lines.
 	if line == "" {
 		return nil, nil
@@ -42,7 +51,25 @@ func parse(line string) (Message, error) {
 	default:
 		return nil, ErrUnknownCommand{command}
 	case "uci":
-		return &UCI{}, nil
+		var m UCI
+		err := m.UnmarshalText([]byte(line))
+		return &m, err
+	case "id":
+		if len(words) == 1 {
+			return nil, ErrUnknownCommand{command}
+		}
+		switch words[1] {
+		case "name":
+			var m IDName
+			err := m.UnmarshalText([]byte(line))
+			return &m, err
+		case "author":
+			var m IDAuthor
+			err := m.UnmarshalText([]byte(line))
+			return &m, err
+		default:
+			return nil, ErrUnknownCommand{command}
+		}
 	}
 }
 
@@ -53,7 +80,13 @@ func (u *UCI) MarshalText() ([]byte, error) {
 	return []byte("uci"), nil
 }
 
-func (u *UCI) UnmarshalText(_ []byte) error {
+func (u *UCI) UnmarshalText(text []byte) error {
+	if !bytes.Equal(text, []byte("uci")) {
+		var err ErrCannotUnmarshal
+		copy(err.Text, text)
+		return err
+	}
+
 	return nil
 }
 
@@ -61,22 +94,52 @@ func (u *UCI) EngineBound() bool {
 	return true
 }
 
-// ID represents the "id" command.
-type ID struct {
-	Name   string
+// IDName represents the "id name" command.
+type IDName struct {
+	Name string
+}
+
+func (i *IDName) MarshalText() ([]byte, error) {
+	return []byte(fmt.Sprintf("id name %s", i.Name)), nil
+}
+
+func (i *IDName) UnmarshalText(text []byte) error {
+	if !bytes.HasPrefix(text, []byte("id name ")) {
+		var err ErrCannotUnmarshal
+		copy(err.Text, text)
+		return err
+	}
+
+	i.Name = strings.TrimPrefix(string(text), "id name ")
+	return nil
+}
+
+func (i *IDName) EngineBound() bool {
+	return true
+}
+
+// IDAuthor represents the "id author" command.
+type IDAuthor struct {
 	Author string
 }
 
-func (i *ID) MarshalText() ([]byte, error) {
-	return []byte(fmt.Sprintf("id name %s\nid author %s", i.Name, i.Author)), nil
+func (i *IDAuthor) MarshalText() ([]byte, error) {
+	return []byte(fmt.Sprintf("id author %s", i.Author)), nil
 }
 
-func (i *ID) UnmarshalText(text []byte) error {
-	return nil // TODO
+func (i *IDAuthor) UnmarshalText(text []byte) error {
+	if !bytes.HasPrefix(text, []byte("id author ")) {
+		var err ErrCannotUnmarshal
+		copy(err.Text, text)
+		return err
+	}
+
+	i.Author = strings.TrimPrefix(string(text), "id author ")
+	return nil
 }
 
-func (i *ID) EngineBound() bool {
-	return false
+func (i *IDAuthor) EngineBound() bool {
+	return true
 }
 
 // UCIOk represents the "uciok" command.
@@ -86,10 +149,16 @@ func (u *UCIOk) MarshalText() ([]byte, error) {
 	return []byte("uciok"), nil
 }
 
-func (u *UCIOk) UnmarshalText(_ []byte) error {
+func (u *UCIOk) UnmarshalText(text []byte) error {
+	if !bytes.Equal(text, []byte("uciok")) {
+		var err ErrCannotUnmarshal
+		copy(err.Text, text)
+		return err
+	}
+
 	return nil
 }
 
 func (u *UCIOk) EngineBound() bool {
-	return false
+	return true
 }

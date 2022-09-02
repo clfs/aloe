@@ -23,7 +23,7 @@ func NewAdapter(e *engine.Engine) *Adapter {
 }
 
 func (a *Adapter) SendLine(line string) ([]Message, error) {
-	msg, err := parse(line)
+	msg, err := Parse(line)
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +46,8 @@ func (a *Adapter) Send(m Message) ([]Message, error) {
 
 func (a *Adapter) sendUCI(m UCI) ([]Message, error) {
 	return []Message{
-		&ID{
-			Name:   "Aloe",
-			Author: "Calvin Figuereo-Supraner",
-		},
+		&IDName{Name: a.e.Name()},
+		&IDAuthor{Author: a.e.Author()},
 		&UCIOk{},
 	}, nil
 }
