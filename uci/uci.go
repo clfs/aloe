@@ -1,22 +1,23 @@
 package uci
 
 import (
+	"errors"
+
 	"github.com/clfs/aloe/engine"
 )
 
+var ErrDone = errors.New("uci: done")
+
 type Adapter struct {
-	e *engine.Engine
+	e    *engine.Engine
+	done bool
 }
 
 func NewAdapter(e *engine.Engine) *Adapter {
-	return &Adapter{e}
+	return &Adapter{e: e, done: false}
 }
 
 func (a *Adapter) SendLine(s string) ([]Response, error) {
-	if s == "" {
-		return nil, nil
-	}
-
 	req, err := toRequest(s)
 	if err != nil {
 		return nil, err
@@ -26,9 +27,13 @@ func (a *Adapter) SendLine(s string) ([]Response, error) {
 }
 
 func (a *Adapter) Send(req Request) ([]Response, error) {
+	if a.done {
+		return nil, ErrDone
+	}
+
 	switch req := req.(type) {
 	default:
-		return nil, ErrUnknownRequest{req}
+		return nil, UnknownRequestError{req}
 	case *RequestUCI:
 		return a.handleUCI(*req)
 	case *RequestIsReady:
@@ -37,6 +42,14 @@ func (a *Adapter) Send(req Request) ([]Response, error) {
 		return a.handleUCINewGame(*req)
 	case *RequestPosition:
 		return a.handlePosition(*req)
+	case *RequestGo:
+		return a.handleGo(*req)
+	case *RequestStop:
+		return a.handleStop(*req)
+	case *RequestPonderHit:
+		return a.handlePonderHit(*req)
+	case *RequestQuit:
+		return a.handleQuit(*req)
 	}
 }
 
@@ -70,4 +83,20 @@ func (a *Adapter) handlePosition(req RequestPosition) ([]Response, error) {
 	}
 
 	return nil, nil
+}
+
+func (a *Adapter) handleGo(req RequestGo) ([]Response, error) {
+	return nil, nil // TODO: implement.
+}
+
+func (a *Adapter) handleStop(req RequestStop) ([]Response, error) {
+	return nil, nil // TODO: implement.
+}
+
+func (a *Adapter) handlePonderHit(req RequestPonderHit) ([]Response, error) {
+	return nil, nil // TODO: implement.
+}
+
+func (a *Adapter) handleQuit(req RequestQuit) ([]Response, error) {
+	return nil, ErrDone
 }

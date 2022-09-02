@@ -38,3 +38,21 @@ type ResponseReadyOk struct{}
 func (resp *ResponseReadyOk) MarshalText() ([]byte, error) {
 	return []byte("readyok"), nil
 }
+
+type ResponseBestMove struct {
+	Move   string
+	Ponder string
+}
+
+func (resp *ResponseBestMove) MarshalText() ([]byte, error) {
+	switch {
+	case resp.Move == "" && resp.Ponder == "":
+		return nil, fmt.Errorf("cannot marshal empty bestmove")
+	case resp.Move != "" && resp.Ponder != "":
+		return []byte(fmt.Sprintf("bestmove %s ponder %s", resp.Move, resp.Ponder)), nil
+	case resp.Move != "":
+		return []byte(fmt.Sprintf("bestmove %s", resp.Move)), nil
+	default:
+		return nil, fmt.Errorf("cannot marshal bestmove with empty ponder")
+	}
+}

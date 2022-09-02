@@ -7,11 +7,11 @@ import (
 	"time"
 )
 
-type ErrUnknownRequest struct {
+type UnknownRequestError struct {
 	Request Request
 }
 
-func (e ErrUnknownRequest) Error() string {
+func (e UnknownRequestError) Error() string {
 	return fmt.Sprintf("unknown request: %s", e.Request)
 }
 
@@ -101,4 +101,30 @@ type RequestGo struct {
 	BlackIncrement     time.Duration // BlackIncrement is the amount of time added to Black's clock after each move.
 	MoveTime           time.Duration // MoveTime is the maximum amount of time to search for a move.
 	MovesToGo          int           // MovesToGo is the number of moves until the next time control.
+}
+
+func (req *RequestGo) UnmarshalText(text []byte) error {
+	_ = text
+	return nil // TODO: implement.
+}
+
+type RequestStop struct{}
+
+func (req *RequestStop) UnmarshalText(text []byte) error {
+	_ = text
+	return nil
+}
+
+type RequestPonderHit struct{}
+
+func (req *RequestPonderHit) UnmarshalText(text []byte) error {
+	_ = text
+	return nil
+}
+
+type RequestQuit struct{}
+
+func (req *RequestQuit) UnmarshalText(text []byte) error {
+	_ = text
+	return nil
 }
