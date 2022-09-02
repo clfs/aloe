@@ -17,3 +17,11 @@ func (e *Engine) Author() string {
 func (e *Engine) NewGame() error {
 	return nil // TODO: implement.
 }
+
+func (e *Engine) NewGameFromFEN(fen string) error {
+	return nil // TODO: implement.
+}
+
+func (e *Engine) MoveAlgebraic(move string) error {
+	return nil // TODO: implement.
+}

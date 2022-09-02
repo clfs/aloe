@@ -35,6 +35,8 @@ func (a *Adapter) Send(req Request) ([]Response, error) {
 		return a.handleIsReady(*req)
 	case *RequestUCINewGame:
 		return a.handleUCINewGame(*req)
+	case *RequestPosition:
+		return a.handlePosition(*req)
 	}
 }
 
@@ -54,4 +56,18 @@ func (a *Adapter) handleIsReady(req RequestIsReady) ([]Response, error) {
 
 func (a *Adapter) handleUCINewGame(req RequestUCINewGame) ([]Response, error) {
 	return nil, a.e.NewGame()
+}
+
+func (a *Adapter) handlePosition(req RequestPosition) ([]Response, error) {
+	if err := a.e.NewGameFromFEN(req.FEN); err != nil {
+		return nil, err
+	}
+
+	for _, move := range req.Moves {
+		if err := a.e.MoveAlgebraic(move); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
 }
