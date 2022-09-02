@@ -1,8 +1,10 @@
 package chess
 
+// Square represents a square on a chess board.
 type Square int8
 
 const (
+	// NoSquare is a sentinel value for the absence of a square.
 	NoSquare Square = iota - 1
 	A1
 	B1
@@ -70,10 +72,12 @@ const (
 	H8
 )
 
+// File returns the file of the square.
 func (s Square) File() File {
 	return File(s % 8)
 }
 
+// Rank returns the rank of the square.
 func (s Square) Rank() Rank {
 	return Rank(s / 8)
 }
