@@ -32,3 +32,9 @@ type ResponseUCIOk struct{}
 func (resp *ResponseUCIOk) MarshalText() ([]byte, error) {
 	return []byte("uciok"), nil
 }
+
+type ResponseReadyOk struct{}
+
+func (resp *ResponseReadyOk) MarshalText() ([]byte, error) {
+	return []byte("readyok"), nil
+}

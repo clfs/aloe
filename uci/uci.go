@@ -13,6 +13,10 @@ func NewAdapter(e *engine.Engine) *Adapter {
 }
 
 func (a *Adapter) SendLine(s string) ([]Response, error) {
+	if s == "" {
+		return nil, nil
+	}
+
 	req, err := toRequest(s)
 	if err != nil {
 		return nil, err
@@ -26,14 +30,28 @@ func (a *Adapter) Send(req Request) ([]Response, error) {
 	default:
 		return nil, ErrUnknownRequest{req}
 	case *RequestUCI:
-		return a.sendUCI(*req)
+		return a.handleUCI(*req)
+	case *RequestIsReady:
+		return a.handleIsReady(*req)
+	case *RequestUCINewGame:
+		return a.handleUCINewGame(*req)
 	}
 }
 
-func (a *Adapter) sendUCI(req RequestUCI) ([]Response, error) {
+func (a *Adapter) handleUCI(req RequestUCI) ([]Response, error) {
 	return []Response{
 		&ResponseID{Name: a.e.Name()},
 		&ResponseID{Author: a.e.Author()},
 		&ResponseUCIOk{},
 	}, nil
+}
+
+func (a *Adapter) handleIsReady(req RequestIsReady) ([]Response, error) {
+	return []Response{
+		&ResponseReadyOk{},
+	}, nil
+}
+
+func (a *Adapter) handleUCINewGame(req RequestUCINewGame) ([]Response, error) {
+	return nil, a.e.NewGame()
 }
