@@ -1,18 +1,8 @@
 package uci
 
 import (
-	"fmt"
-
 	"github.com/clfs/aloe/engine"
 )
-
-type ErrWrongDirection struct {
-	Message Message
-}
-
-func (e ErrWrongDirection) Error() string {
-	return fmt.Sprintf("wrong direction: %s", e.Message)
-}
 
 type Adapter struct {
 	e *engine.Engine
@@ -22,32 +12,28 @@ func NewAdapter(e *engine.Engine) *Adapter {
 	return &Adapter{e}
 }
 
-func (a *Adapter) SendLine(line string) ([]Message, error) {
-	msg, err := Parse(line)
+func (a *Adapter) SendLine(line string) ([]Response, error) {
+	req, err := ToRequest(line)
 	if err != nil {
 		return nil, err
 	}
 
-	return a.Send(msg)
+	return a.Send(req)
 }
 
-func (a *Adapter) Send(m Message) ([]Message, error) {
-	if !m.EngineBound() {
-		return nil, ErrWrongDirection{m}
-	}
-
-	switch v := m.(type) {
+func (a *Adapter) Send(req Request) ([]Response, error) {
+	switch req := req.(type) {
 	default:
-		return nil, ErrUnknownMessage{m}
-	case *UCI:
-		return a.sendUCI(*v)
+		return nil, ErrUnknownRequest{req}
+	case *RequestUCI:
+		return a.sendUCI(*req)
 	}
 }
 
-func (a *Adapter) sendUCI(m UCI) ([]Message, error) {
-	return []Message{
-		&IDName{Name: a.e.Name()},
-		&IDAuthor{Author: a.e.Author()},
-		&UCIOk{},
+func (a *Adapter) sendUCI(req RequestUCI) ([]Response, error) {
+	return []Response{
+		&ResponseID{Name: a.e.Name()},
+		&ResponseID{Author: a.e.Author()},
+		&ResponseUCIOk{},
 	}, nil
 }
