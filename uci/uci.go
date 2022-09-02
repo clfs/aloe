@@ -14,7 +14,7 @@ type Adapter struct {
 }
 
 func NewAdapter(e *engine.Engine) *Adapter {
-	return &Adapter{e: e, done: false}
+	return &Adapter{e: e}
 }
 
 func (a *Adapter) SendLine(s string) ([]Response, error) {
