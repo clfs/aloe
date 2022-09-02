@@ -4,6 +4,7 @@ import (
 	"encoding"
 	"fmt"
 	"strings"
+	"time"
 )
 
 type ErrUnknownRequest struct {
@@ -79,4 +80,25 @@ func (req *RequestPosition) UnmarshalText(text []byte) error {
 		req.Moves = words[8:]
 	}
 	return nil
+}
+
+// RequestGo represents the "go" command.
+// Zero values for non-bool fields represent absent controls and must be ignored.
+// Time controls are rounded down to the millisecond when sent to the engine.
+type RequestGo struct {
+	// Search controls.
+	SearchMoves []string // SearchMoves restricts the search to the given moves.
+	Infinite    bool     // Infinite is true if the engine should search until the "stop" command.
+	Ponder      bool     // Ponder is true if the engine is allowed to ponder during the search.
+	Depth       int      // Depth is the maximum search depth in plies.
+	Nodes       int      // Nodes is the maximum number of nodes to search.
+	Mate        int      // Mate is the maximum number of moves to search for a mate.
+
+	// Time controls.
+	WhiteTimeRemaining time.Duration // WhiteTimeRemaining is the amount of time remaining for White.
+	BlackTimeRemaining time.Duration // BlackTimeRemaining is the amount of time remaining for Black.
+	WhiteIncrement     time.Duration // WhiteIncrement is the amount of time added to White's clock after each move.
+	BlackIncrement     time.Duration // BlackIncrement is the amount of time added to Black's clock after each move.
+	MoveTime           time.Duration // MoveTime is the maximum amount of time to search for a move.
+	MovesToGo          int           // MovesToGo is the number of moves until the next time control.
 }
