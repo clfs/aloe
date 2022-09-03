@@ -30,7 +30,7 @@ const (
 
 // Color returns the color of the piece.
 func (p Piece) Color() Color {
-	return Color(p >> 3)
+	return Color(p&8 == 1)
 }
 
 // Role returns the role of the piece.
