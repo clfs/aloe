@@ -11,8 +11,8 @@ type Board struct {
 	Kings   Bitboard
 }
 
-func (b *Board) Pieces(p Piece) Bitboard {
-	switch p.Role() {
+func (b *Board) ByRole(r Role) Bitboard {
+	switch r {
 	case Pawn:
 		return b.Pawns
 	case Knight:
@@ -23,20 +23,15 @@ func (b *Board) Pieces(p Piece) Bitboard {
 		return b.Rooks
 	case Queen:
 		return b.Queens
-	case King:
+	default: // King
 		return b.Kings
-	default:
-		panic("invalid piece")
 	}
 }
 
-func (b *Board) Color(c Color) Bitboard {
-	switch c {
-	case White:
+// ByColor returns a bitboard for pieces matching the given color.
+func (b *Board) ByColor(c Color) Bitboard {
+	if c == White {
 		return b.White
-	case Black:
-		return b.Black
-	default:
-		panic("invalid color")
 	}
+	return b.Black
 }
