@@ -1,51 +1,47 @@
 package chess
 
 type Board struct {
-	White   Bitboard
-	Black   Bitboard
-	Pawns   Bitboard
-	Knights Bitboard
-	Bishops Bitboard
-	Rooks   Bitboard
-	Queens  Bitboard
-	Kings   Bitboard
+	// Bitboards for pieces by color.
+	white, black Bitboard
+	// Bitboards for pieces by role.
+	pawns, knights, bishops, rooks, queens, kings Bitboard
 }
 
 // NewBoard returns a new board with all pieces in their starting positions.
 func NewBoard() *Board {
 	return &Board{
-		White:   Bitboard(0x0000_0000_0000_FFFF),
-		Black:   Bitboard(0xFFFF_0000_0000_0000),
-		Pawns:   Bitboard(0x00FF_0000_0000_FF00),
-		Knights: Bitboard(0x4200_0000_0000_0042),
-		Bishops: Bitboard(0x2400_0000_0000_0024),
-		Rooks:   Bitboard(0x8100_0000_0000_0081),
-		Queens:  Bitboard(0x0800_0000_0000_0008),
-		Kings:   Bitboard(0x1000_0000_0000_0010),
+		white:   Bitboard(0x0000_0000_0000_FFFF),
+		black:   Bitboard(0xFFFF_0000_0000_0000),
+		pawns:   Bitboard(0x00FF_0000_0000_FF00),
+		knights: Bitboard(0x4200_0000_0000_0042),
+		bishops: Bitboard(0x2400_0000_0000_0024),
+		rooks:   Bitboard(0x8100_0000_0000_0081),
+		queens:  Bitboard(0x0800_0000_0000_0008),
+		kings:   Bitboard(0x1000_0000_0000_0010),
 	}
 }
 
 func (b *Board) ByRole(r Role) Bitboard {
 	switch r {
 	case Pawn:
-		return b.Pawns
+		return b.pawns
 	case Knight:
-		return b.Knights
+		return b.knights
 	case Bishop:
-		return b.Bishops
+		return b.bishops
 	case Rook:
-		return b.Rooks
+		return b.rooks
 	case Queen:
-		return b.Queens
+		return b.queens
 	default: // King
-		return b.Kings
+		return b.kings
 	}
 }
 
 // ByColor returns a bitboard of pieces by color.
 func (b *Board) ByColor(c Color) Bitboard {
 	if c == White {
-		return b.White
+		return b.white
 	}
-	return b.Black
+	return b.black
 }

@@ -1,7 +1,7 @@
 package chess
 
 // Role is the role of a piece.
-type Role int8
+type Role uint8
 
 const (
 	Pawn Role = iota

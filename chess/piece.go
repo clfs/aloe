@@ -4,10 +4,6 @@ package chess
 // the color.
 type Piece int8
 
-// NoPiece is a sentinel value for the absence of a piece. Calling Piece methods
-// on NoPiece can return invalid results.
-const NoPiece Piece = -1
-
 // White pieces.
 const (
 	WhitePawn Piece = iota

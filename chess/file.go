@@ -1,7 +1,7 @@
 package chess
 
 // File is a file on a chess board.
-type File int8
+type File uint8
 
 // Board files.
 const (
