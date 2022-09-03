@@ -1,3 +1,3 @@
 package chess
 
-type Bitboard int64
+type Bitboard uint64
