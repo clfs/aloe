@@ -4,7 +4,7 @@ package chess
 // the color.
 type Piece int8
 
-// White pieces.
+// White [Piece] constants.
 const (
 	WhitePawn Piece = iota
 	WhiteKnight
@@ -14,7 +14,7 @@ const (
 	WhiteKing
 )
 
-// Black pieces.
+// Black [Piece] constants.
 const (
 	BlackPawn Piece = 8 + iota
 	BlackKnight

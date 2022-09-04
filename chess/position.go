@@ -29,17 +29,19 @@ func (p *Position) LegalMoves() []Move {
 }
 
 // IsLegalMove returns true if the move is legal in the position. It does not
-// account for insufficient material.
+// account for insufficient material or three-fold repetition.
 func (p *Position) IsLegalMove(m Move) bool {
 	return false
 }
 
-// Move updates the position by making a move. It returns an [Undo] that can be
-// used to undo the move.
+// Move updates the position by making a move. It returns information that can
+// be used to undo the move.
 //
-// The move must be legal in the position. If not, behavior is undefined.
+// The move must be legal by the definition of [Position.IsLegalMove]. If not,
+// behavior is undefined.
 func (p *Position) Move(m Move) *Undo { return nil }
 
+// Undo undoes a [Position.Move] call.
 func (p *Position) Undo(u *Undo) {
 
 }
