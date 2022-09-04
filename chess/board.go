@@ -21,6 +21,11 @@ func NewBoard() *Board {
 	}
 }
 
+// NewBoardFromFEN returns a new board from a FEN string.
+func NewBoardFromFEN(fen string) (*Board, error) {
+	return nil, nil
+}
+
 func (b *Board) ByRole(r Role) Bitboard {
 	switch r {
 	case Pawn:

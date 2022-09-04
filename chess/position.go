@@ -13,6 +13,18 @@ type Position struct {
 	ply50MoveRule uint8  // Number of plies since the last capture or pawn move.
 }
 
+func NewPosition() *Position {
+	return nil
+}
+
+func (p *Position) MarshalText() ([]byte, error) {
+	return nil, nil
+}
+
+func (p *Position) UnmarshalText(text []byte) error {
+	return nil
+}
+
 // SideToMove returns the color of the player to move.
 func (p *Position) SideToMove() Color {
 	return p.sideToMove
