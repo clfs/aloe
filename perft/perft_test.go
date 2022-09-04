@@ -125,3 +125,26 @@ func TestDivide(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkDivide_5(b *testing.B) {
+	p := chess.NewPosition()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Divide(p, 5)
+	}
+}
+
+func ExampleDivide() {
+	result := Divide(chess.NewPosition(), 5)
+
+	move := chess.Move{From: chess.E2, To: chess.E4}
+
+	count, ok := result[move]
+	if ok {
+		fmt.Printf("e2e4: %d\n", count)
+	} else {
+		fmt.Println("move not legal")
+	}
+	// Output:
+	// e2e4: 405385
+}
