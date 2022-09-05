@@ -1,3 +1,4 @@
+// Package engine implements the Aloe chess engine.
 package engine
 
 type Engine struct{}
