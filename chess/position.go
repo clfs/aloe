@@ -55,5 +55,28 @@ func (p *Position) Move(m Move) *Undo { return nil }
 
 // Undo undoes a [Position.Move] call.
 func (p *Position) Undo(u *Undo) {
+	// Move the piece back.
 
+	// Restore the captured piece, if any.
+	if u.WasCapture {
+		capturedPiece := Piece{p.sideToMove, u.CapturedRole}
+		p.board.Put(capturedPiece, u.Move.To)
+	}
+
+	// Restore en passant settings.
+	p.enPassantFlag = u.EnPassantFlag
+	p.enPassantTarget = u.EnPassantTarget
+
+	// Restore castling rights.
+	p.castlingRights = u.CastlingRights
+}
+
+// HalfMoveClock returns the number of half moves since the last capture or pawn move.
+func (p *Position) HalfMoveClock() uint8 {
+	return p.ply50MoveRule
+}
+
+// FullMoveNumber returns the number of full moves since the start of the game.
+func (p *Position) FullMoveNumber() uint16 {
+	return p.plySinceStart/2 + 1
 }

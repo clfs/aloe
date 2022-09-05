@@ -50,3 +50,47 @@ func (b *Board) ByColor(c Color) Bitboard {
 	}
 	return b.black
 }
+
+// Put puts a piece on a square. Any piece already on the square is removed.
+func (b *Board) Put(p Piece, s Square) {
+	b.Remove(s)
+	b.PutDangerous(p, s)
+}
+
+// PutDangerous puts a piece on a square without checking if a different piece
+// already exists there. It is faster than [Board.Put].
+func (b *Board) PutDangerous(p Piece, s Square) {
+	switch p.Color {
+	case White:
+		b.white.Set(s)
+	default: // Black
+		b.black.Set(s)
+	}
+
+	switch p.Role {
+	case Pawn:
+		b.pawns.Set(s)
+	case Knight:
+		b.knights.Set(s)
+	case Bishop:
+		b.bishops.Set(s)
+	case Rook:
+		b.rooks.Set(s)
+	case Queen:
+		b.queens.Set(s)
+	default: // King
+		b.kings.Set(s)
+	}
+}
+
+// Remove removes a piece from the square, if any.
+func (b *Board) Remove(s Square) {
+	b.white.Clear(s)
+	b.black.Clear(s)
+	b.pawns.Clear(s)
+	b.knights.Clear(s)
+	b.bishops.Clear(s)
+	b.rooks.Clear(s)
+	b.queens.Clear(s)
+	b.kings.Clear(s)
+}
