@@ -1,3 +1,8 @@
+// Package perft implements the Perft test suite.
+//
+// See [Perft] for more information.
+//
+// [Perft]: https://www.chessprogramming.org/Perft
 package perft
 
 import "github.com/clfs/aloe/chess"
