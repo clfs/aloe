@@ -2,15 +2,15 @@ package chess
 
 // Position is a chess position.
 type Position struct {
-	board          Board          // Piece placements.
-	sideToMove     Color          // Color of the player to move.
-	castlingRights CastlingRights // Available castling rights.
+	board          Board
+	sideToMove     Color
+	castlingRights CastlingRights
 
-	enPassantPresent bool   // True if an en passant square is present (legal or not).
-	enPassantTarget  Square // Capture square for en passant, if any.
+	enPassantFlag   bool   // Whether the previous move was a double pawn push.
+	enPassantTarget Square // The en passant target square. Only valid if enPassantFlag is true.
 
-	plySinceStart uint16 // Number of plies since the start of the game.
-	ply50MoveRule uint8  // Number of plies since the last capture or pawn move.
+	plySinceStart uint16 // plies since start of the game
+	ply50MoveRule uint8  // plies since last capture or pawn move
 }
 
 func NewPosition() *Position {
