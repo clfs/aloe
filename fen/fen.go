@@ -395,6 +395,7 @@ func decodeBoard(s string) (chess.Board, error) {
 	}
 
 	// Parse the board.
+
 	square := chess.A8
 	for _, rne := range s {
 		switch rne {
