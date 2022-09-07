@@ -13,8 +13,8 @@ import (
 	"github.com/clfs/aloe/chess"
 )
 
-// StartingPosition is the FEN for the starting position.
-const StartingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+// StartingFEN is the FEN for the starting position.
+const StartingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // Encode returns the FEN for the provided position.
 func Encode(p chess.Position) (string, error) {
@@ -114,13 +114,24 @@ func Decode(fen string) (chess.Position, error) {
 		return chess.Position{}, fmt.Errorf("not exactly 6 fields")
 	}
 
+	for _, field := range fields {
+		if field == "" {
+			return chess.Position{}, fmt.Errorf("contains empty field")
+		}
+	}
+
 	// Decode the board.
 
-	square := chess.A8
+	square := chess.A8        // starting square
+	seenSquares := [64]bool{} // ensure each square is only seen once
+
 	for _, r := range fields[0] {
 		switch r {
 		case '1', '2', '3', '4', '5', '6', '7', '8':
-			square += chess.Square(r - '0') // advance rightwards
+			for i := 0; i < int(r-'0'); i++ {
+				seenSquares[square] = true
+				square++
+			}
 
 		case '/':
 			square -= 16 // move to the leftmost square in the rank below
@@ -132,7 +143,18 @@ func Decode(fen string) (chess.Position, error) {
 			}
 
 			pos.Board.Put(piece, square)
+			seenSquares[square] = true
 			square++
+		}
+	}
+
+	// Ensure all squares were seen.
+	if square != chess.A2 {
+		return chess.Position{}, fmt.Errorf("malformed board")
+	}
+	for _, seen := range seenSquares {
+		if !seen {
+			return chess.Position{}, fmt.Errorf("malformed board")
 		}
 	}
 

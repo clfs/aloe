@@ -2,22 +2,22 @@ package chess
 
 type Board struct {
 	// Bitboards for pieces by color.
-	white, black Bitboard
+	White, Black Bitboard
 	// Bitboards for pieces by role.
-	pawns, knights, bishops, rooks, queens, kings Bitboard
+	Pawns, Knights, Bishops, Rooks, Queens, Kings Bitboard
 }
 
 // NewBoard returns a new board with all pieces in their starting positions.
 func NewBoard() Board {
 	return Board{
-		white:   Bitboard(0x0000_0000_0000_FFFF),
-		black:   Bitboard(0xFFFF_0000_0000_0000),
-		pawns:   Bitboard(0x00FF_0000_0000_FF00),
-		knights: Bitboard(0x4200_0000_0000_0042),
-		bishops: Bitboard(0x2400_0000_0000_0024),
-		rooks:   Bitboard(0x8100_0000_0000_0081),
-		queens:  Bitboard(0x0800_0000_0000_0008),
-		kings:   Bitboard(0x1000_0000_0000_0010),
+		White:   Bitboard(0x0000_0000_0000_FFFF),
+		Black:   Bitboard(0xFFFF_0000_0000_0000),
+		Pawns:   Bitboard(0x00FF_0000_0000_FF00),
+		Knights: Bitboard(0x4200_0000_0000_0042),
+		Bishops: Bitboard(0x2400_0000_0000_0024),
+		Rooks:   Bitboard(0x8100_0000_0000_0081),
+		Queens:  Bitboard(0x0800_0000_0000_0008),
+		Kings:   Bitboard(0x1000_0000_0000_0010),
 	}
 }
 
@@ -29,26 +29,26 @@ func NewBoardFromFEN(fen string) (*Board, error) {
 func (b *Board) ByRole(r Role) Bitboard {
 	switch r {
 	case Pawn:
-		return b.pawns
+		return b.Pawns
 	case Knight:
-		return b.knights
+		return b.Knights
 	case Bishop:
-		return b.bishops
+		return b.Bishops
 	case Rook:
-		return b.rooks
+		return b.Rooks
 	case Queen:
-		return b.queens
+		return b.Queens
 	default: // King
-		return b.kings
+		return b.Kings
 	}
 }
 
 // ByColor returns a bitboard of pieces by color.
 func (b *Board) ByColor(c Color) Bitboard {
 	if c == White {
-		return b.white
+		return b.White
 	}
-	return b.black
+	return b.Black
 }
 
 // Put puts a piece on a square. Any piece already on the square is removed.
@@ -62,37 +62,37 @@ func (b *Board) Put(p Piece, s Square) {
 func (b *Board) PutDangerous(p Piece, s Square) {
 	switch p.Color {
 	case White:
-		b.white.Set(s)
+		b.White.Set(s)
 	default: // Black
-		b.black.Set(s)
+		b.Black.Set(s)
 	}
 
 	switch p.Role {
 	case Pawn:
-		b.pawns.Set(s)
+		b.Pawns.Set(s)
 	case Knight:
-		b.knights.Set(s)
+		b.Knights.Set(s)
 	case Bishop:
-		b.bishops.Set(s)
+		b.Bishops.Set(s)
 	case Rook:
-		b.rooks.Set(s)
+		b.Rooks.Set(s)
 	case Queen:
-		b.queens.Set(s)
+		b.Queens.Set(s)
 	default: // King
-		b.kings.Set(s)
+		b.Kings.Set(s)
 	}
 }
 
 // Remove removes a piece from the square, if any.
 func (b *Board) Remove(s Square) {
-	b.white.Clear(s)
-	b.black.Clear(s)
-	b.pawns.Clear(s)
-	b.knights.Clear(s)
-	b.bishops.Clear(s)
-	b.rooks.Clear(s)
-	b.queens.Clear(s)
-	b.kings.Clear(s)
+	b.White.Clear(s)
+	b.Black.Clear(s)
+	b.Pawns.Clear(s)
+	b.Knights.Clear(s)
+	b.Bishops.Clear(s)
+	b.Rooks.Clear(s)
+	b.Queens.Clear(s)
+	b.Kings.Clear(s)
 }
 
 // At returns the piece on the square, if any.
@@ -100,24 +100,24 @@ func (b *Board) At(s Square) (Piece, bool) {
 	var p Piece
 
 	switch {
-	case b.white.Get(s):
+	case b.White.Get(s):
 		p.Color = White
-	case b.black.Get(s):
+	case b.Black.Get(s):
 		p.Color = Black
 	default:
 		return p, false
 	}
 
 	switch {
-	case b.pawns.Get(s):
+	case b.Pawns.Get(s):
 		p.Role = Pawn
-	case b.knights.Get(s):
+	case b.Knights.Get(s):
 		p.Role = Knight
-	case b.bishops.Get(s):
+	case b.Bishops.Get(s):
 		p.Role = Bishop
-	case b.rooks.Get(s):
+	case b.Rooks.Get(s):
 		p.Role = Rook
-	case b.queens.Get(s):
+	case b.Queens.Get(s):
 		p.Role = Queen
 	default: // b.kings.Get(s)
 		p.Role = King

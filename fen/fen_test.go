@@ -4,31 +4,38 @@ import (
 	"testing"
 
 	"github.com/clfs/aloe/chess"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestEncode(t *testing.T) {
-	cases := []struct {
-		pos  chess.Position
-		want string
-	}{
-		{
-			pos:  chess.NewPosition(),
-			want: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-		},
+	pos := chess.NewPosition()
+	want := StartingFEN
+
+	got, err := Encode(pos)
+	if err != nil {
+		t.Errorf("error: %v", err)
 	}
-	for _, c := range cases {
-		got, err := Encode(c.pos)
-		if err != nil {
-			t.Errorf("unable to decode %q: %v", c.want, err)
-		}
-		if c.want != got {
-			t.Errorf("want %q, got %q", c.want, got)
-		}
+	if want != got {
+		t.Errorf("want %q, got %q", want, got)
+	}
+
+}
+
+func TestDecode(t *testing.T) {
+	fen := StartingFEN
+	want := chess.NewPosition()
+
+	got, err := Decode(fen)
+	if err != nil {
+		t.Errorf("error: %v", err)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("(-want, +got):\n%s", diff)
 	}
 }
 
 func FuzzRoundTrip(f *testing.F) {
-	f.Add(StartingPosition)
+	f.Add(StartingFEN)
 	f.Fuzz(func(t *testing.T, old string) {
 		pos, err := Decode(old)
 		if err != nil {
