@@ -8,8 +8,8 @@ type Board struct {
 }
 
 // NewBoard returns a new board with all pieces in their starting positions.
-func NewBoard() *Board {
-	return &Board{
+func NewBoard() Board {
+	return Board{
 		white:   Bitboard(0x0000_0000_0000_FFFF),
 		black:   Bitboard(0xFFFF_0000_0000_0000),
 		pawns:   Bitboard(0x00FF_0000_0000_FF00),
@@ -93,4 +93,35 @@ func (b *Board) Remove(s Square) {
 	b.rooks.Clear(s)
 	b.queens.Clear(s)
 	b.kings.Clear(s)
+}
+
+// At returns the piece on the square, if any.
+func (b *Board) At(s Square) (Piece, bool) {
+	var p Piece
+
+	switch {
+	case b.white.Get(s):
+		p.Color = White
+	case b.black.Get(s):
+		p.Color = Black
+	default:
+		return p, false
+	}
+
+	switch {
+	case b.pawns.Get(s):
+		p.Role = Pawn
+	case b.knights.Get(s):
+		p.Role = Knight
+	case b.bishops.Get(s):
+		p.Role = Bishop
+	case b.rooks.Get(s):
+		p.Role = Rook
+	case b.queens.Get(s):
+		p.Role = Queen
+	default: // b.kings.Get(s)
+		p.Role = King
+	}
+
+	return p, true
 }

@@ -10,5 +10,5 @@ type Undo struct {
 	EnPassantFlag   bool   // Was the move to undo preceded by a double pawn push?
 	EnPassantTarget Square // En passant target square, if any.
 
-	CastlingRights CastlingRights // Previous castling rights.
+	CastleRights CastleRights // Previous castle rights.
 }

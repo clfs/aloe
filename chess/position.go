@@ -2,9 +2,9 @@ package chess
 
 // Position is a chess position.
 type Position struct {
-	board          Board
-	sideToMove     Color
-	castlingRights CastlingRights
+	board        Board
+	sideToMove   Color
+	castleRights CastleRights
 
 	enPassantFlag   bool   // Whether the previous move was a double pawn push.
 	enPassantTarget Square // The en passant target square. Only valid if enPassantFlag is true.
@@ -13,8 +13,12 @@ type Position struct {
 	ply50MoveRule uint8  // plies since last capture or pawn move
 }
 
+// NewPosition returns a new starting position.
 func NewPosition() Position {
-	return Position{} // TODO
+	return Position{
+		board:        NewBoard(),
+		castleRights: NewCastleRights(),
+	}
 }
 
 func (p *Position) MarshalText() ([]byte, error) {
@@ -30,9 +34,19 @@ func (p *Position) SideToMove() Color {
 	return p.sideToMove
 }
 
+// CastleRights returns both players' castle rights.
+func (p *Position) CastleRights() CastleRights {
+	return p.castleRights
+}
+
 // Board returns the board.
 func (p *Position) Board() Board {
 	return p.board
+}
+
+// EnPassantInfo returns information about the en passant target square.
+func (p *Position) EnPassantInfo() (Square, bool) {
+	return p.enPassantTarget, p.enPassantFlag
 }
 
 // LegalMoves returns a list of legal moves.
@@ -68,7 +82,7 @@ func (p *Position) Undo(u *Undo) {
 	p.enPassantTarget = u.EnPassantTarget
 
 	// Restore castling rights.
-	p.castlingRights = u.CastlingRights
+	p.castleRights = u.CastleRights
 }
 
 // HalfMoveClock returns the number of half moves since the last capture or pawn move.

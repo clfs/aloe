@@ -80,3 +80,7 @@ func (s Square) File() File {
 func (s Square) Rank() Rank {
 	return Rank(s / 8)
 }
+
+func SquareAt(f File, r Rank) Square {
+	return Square(uint8(r)*8 + uint8(f))
+}
