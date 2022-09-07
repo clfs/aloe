@@ -64,13 +64,13 @@ func BenchmarkCount_5(b *testing.B) {
 	p := chess.NewPosition()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Count(p, 5)
+		Count(&p, 5)
 	}
 }
 
 func ExampleCount() {
 	p := chess.NewPosition()
-	nodes := Count(p, 5)
+	nodes := Count(&p, 5)
 	fmt.Println(nodes)
 	// Output: 4865609
 }
@@ -130,12 +130,14 @@ func BenchmarkDivide_5(b *testing.B) {
 	p := chess.NewPosition()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Divide(p, 5)
+		Divide(&p, 5)
 	}
 }
 
 func ExampleDivide() {
-	result := Divide(chess.NewPosition(), 5)
+	p := chess.NewPosition()
+
+	result := Divide(&p, 5)
 
 	move := chess.Move{From: chess.E2, To: chess.E4}
 

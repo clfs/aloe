@@ -13,8 +13,8 @@ type Position struct {
 	ply50MoveRule uint8  // plies since last capture or pawn move
 }
 
-func NewPosition() *Position {
-	return nil
+func NewPosition() Position {
+	return Position{} // TODO
 }
 
 func (p *Position) MarshalText() ([]byte, error) {
