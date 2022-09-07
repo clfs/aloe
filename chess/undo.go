@@ -8,7 +8,7 @@ type Undo struct {
 	CapturedRole Role // Role of the captured piece, if any.
 
 	EnPassantFlag   bool   // Was the move to undo preceded by a double pawn push?
-	EnPassantTarget Square // En passant target square, if any.
+	EnPassantSquare Square // En passant square, if any.
 
 	CastleRights CastleRights // Previous castle rights.
 }

@@ -29,8 +29,6 @@ func TestEncode(t *testing.T) {
 
 func FuzzRoundTrip(f *testing.F) {
 	f.Add(StartingPosition)
-	f.Add("4kb1r/p2rqppp/5n2B2p1B1/4P3/1Q6/PPP2PPP/2K4R w - - 0 1")
-	f.Add("3k4/2p2p2/1p5p/p1p1P1p1/P1Pn2P1/1P3P1P/1B3K2/8 w - - 0 30")
 	f.Fuzz(func(t *testing.T, old string) {
 		pos, err := Decode(old)
 		if err != nil {

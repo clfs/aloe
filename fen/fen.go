@@ -1,13 +1,13 @@
 // Package fen implements Forsyth-Edwards Notation (FEN).
 //
-// [Encode] and [Decode] are exact inverses for all accepted inputs.
-//
-// Accepted inputs must be syntactically correct, but do not have to represent
-// legal positions.
+// Calling [Decode] then [Encode] returns the original value for all accepted
+// inputs. Accepted inputs must be syntactically correct, but do not have to
+// represent legal positions.
 package fen
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/clfs/aloe/chess"
@@ -22,13 +22,11 @@ func Encode(p chess.Position) (string, error) {
 
 	// Encode the board.
 
-	board := p.Board()
-
 	for rank := chess.Rank8; rank <= chess.Rank8; rank-- {
 		empty := 0
 
 		for file := chess.FileA; file <= chess.FileH; file++ {
-			piece, ok := board.At(chess.SquareAt(file, rank))
+			piece, ok := p.Board.At(chess.SquareAt(file, rank))
 			if !ok {
 				empty++
 				continue
@@ -56,11 +54,11 @@ func Encode(p chess.Position) (string, error) {
 		}
 	}
 
-	// Encode the active color.
+	// Encode the side to move.
 
 	b.WriteString(" ")
 
-	s, err := encodeColor(p.SideToMove())
+	s, err := encodeColor(p.SideToMove)
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +69,7 @@ func Encode(p chess.Position) (string, error) {
 
 	b.WriteString(" ")
 
-	s, err = encodeCastleRights(p.CastleRights())
+	s, err = encodeCastleRights(p.CastleRights)
 	if err != nil {
 		return "", err
 	}
@@ -82,7 +80,7 @@ func Encode(p chess.Position) (string, error) {
 
 	b.WriteString(" ")
 
-	s, err = encodeEnPassant(p.EnPassantInfo())
+	s, err = encodeEnPassant(p.EnPassantSquare, p.EnPassantFlag)
 	if err != nil {
 		return "", err
 	}
@@ -93,13 +91,13 @@ func Encode(p chess.Position) (string, error) {
 
 	b.WriteString(" ")
 
-	fmt.Fprintf(&b, "%d", p.HalfMoveClock())
+	fmt.Fprintf(&b, "%d", p.HalfMoveClock)
 
 	// Encode the fullmove number.
 
 	b.WriteString(" ")
 
-	fmt.Fprintf(&b, "%d", p.FullMoveNumber())
+	fmt.Fprintf(&b, "%d", p.FullMoveNumber)
 
 	return b.String(), nil
 }
@@ -107,6 +105,77 @@ func Encode(p chess.Position) (string, error) {
 // Decode returns the position for the provided FEN.
 func Decode(fen string) (chess.Position, error) {
 	var pos chess.Position
+
+	// Split the FEN into fields.
+
+	fields := strings.Split(fen, " ")
+
+	if len(fields) != 6 {
+		return chess.Position{}, fmt.Errorf("not exactly 6 fields")
+	}
+
+	// Decode the board.
+
+	square := chess.A8
+	for _, r := range fields[0] {
+		switch r {
+		case '1', '2', '3', '4', '5', '6', '7', '8':
+			square += chess.Square(r - '0') // advance rightwards
+
+		case '/':
+			square -= 16 // move to the leftmost square in the rank below
+
+		default:
+			piece, err := decodePiece(string(r))
+			if err != nil {
+				return pos, err
+			}
+
+			pos.Board.Put(piece, square)
+			square++
+		}
+	}
+
+	// Decode the side to move.
+
+	sideToMove, err := decodeColor(fields[1])
+	if err != nil {
+		return pos, err
+	}
+	pos.SideToMove = sideToMove
+
+	// Decode the castle rights.
+
+	castleRights, err := decodeCastleRights(fields[2])
+	if err != nil {
+		return pos, err
+	}
+	pos.CastleRights = castleRights
+
+	// Decode the en passant square.
+
+	enPassantSquare, enPassantFlag, err := decodeEnPassant(fields[3])
+	if err != nil {
+		return pos, err
+	}
+	pos.EnPassantSquare = enPassantSquare
+	pos.EnPassantFlag = enPassantFlag
+
+	// Decode the halfmove clock.
+
+	halfMoveClock, err := decodeHalfMoveClock(fields[4])
+	if err != nil {
+		return pos, err
+	}
+	pos.HalfMoveClock = halfMoveClock
+
+	// Decode the fullmove number.
+
+	fullMoveNumber, err := decodeFullMoveNumber(fields[5])
+	if err != nil {
+		return pos, err
+	}
+	pos.FullMoveNumber = fullMoveNumber
 
 	return pos, nil
 }
@@ -251,4 +320,20 @@ func encodeEnPassant(sq chess.Square, ok bool) (string, error) {
 	}
 
 	return s, nil
+}
+
+func decodeHalfMoveClock(s string) (uint8, error) {
+	n, err := strconv.ParseUint(s, 10, 8)
+	if err != nil {
+		return 0, fmt.Errorf("invalid halfmove clock: %s", s)
+	}
+	return uint8(n), nil
+}
+
+func decodeFullMoveNumber(s string) (uint16, error) {
+	n, err := strconv.ParseUint(s, 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf("invalid fullmove number: %s", s)
+	}
+	return uint16(n), nil
 }
