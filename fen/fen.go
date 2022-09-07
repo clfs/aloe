@@ -129,6 +129,9 @@ func Decode(fen string) (chess.Position, error) {
 		switch r {
 		case '1', '2', '3', '4', '5', '6', '7', '8':
 			for i := 0; i < int(r-'0'); i++ {
+				if square > chess.H8 {
+					return pos, fmt.Errorf("malformed board: too many squares")
+				}
 				seenSquares[square] = true
 				square++
 			}
@@ -150,11 +153,11 @@ func Decode(fen string) (chess.Position, error) {
 
 	// Ensure all squares were seen.
 	if square != chess.A2 {
-		return chess.Position{}, fmt.Errorf("malformed board")
+		return chess.Position{}, fmt.Errorf("malformed board: wrong final square")
 	}
 	for _, seen := range seenSquares {
 		if !seen {
-			return chess.Position{}, fmt.Errorf("malformed board")
+			return chess.Position{}, fmt.Errorf("malformed board: not all squares seen")
 		}
 	}
 
