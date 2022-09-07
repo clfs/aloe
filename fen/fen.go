@@ -122,44 +122,11 @@ func Decode(fen string) (chess.Position, error) {
 
 	// Decode the board.
 
-	square := chess.A8        // starting square
-	seenSquares := [64]bool{} // ensure each square is only seen once
-
-	for _, r := range fields[0] {
-		switch r {
-		case '1', '2', '3', '4', '5', '6', '7', '8':
-			for i := 0; i < int(r-'0'); i++ {
-				if square > chess.H8 {
-					return pos, fmt.Errorf("malformed board: too many squares")
-				}
-				seenSquares[square] = true
-				square++
-			}
-
-		case '/':
-			square -= 16 // move to the leftmost square in the rank below
-
-		default:
-			piece, err := decodePiece(string(r))
-			if err != nil {
-				return pos, err
-			}
-
-			pos.Board.Put(piece, square)
-			seenSquares[square] = true
-			square++
-		}
+	board, err := decodeBoard(fields[0])
+	if err != nil {
+		return pos, err
 	}
-
-	// Ensure all squares were seen.
-	if square != chess.A2 {
-		return chess.Position{}, fmt.Errorf("malformed board: wrong final square")
-	}
-	for _, seen := range seenSquares {
-		if !seen {
-			return chess.Position{}, fmt.Errorf("malformed board: not all squares seen")
-		}
-	}
+	pos.Board = board
 
 	// Decode the side to move.
 
@@ -348,17 +315,102 @@ func encodeEnPassant(sq chess.Square, ok bool) (string, error) {
 }
 
 func decodeHalfMoveClock(s string) (uint8, error) {
+	if s != "0" && strings.HasPrefix(s, "0") {
+		return 0, fmt.Errorf("invalid half move clock: %s", s)
+	}
+
 	n, err := strconv.ParseUint(s, 10, 8)
 	if err != nil {
-		return 0, fmt.Errorf("invalid halfmove clock: %s", s)
+		return 0, fmt.Errorf("invalid half move clock: %s", s)
 	}
+
 	return uint8(n), nil
 }
 
 func decodeFullMoveNumber(s string) (uint16, error) {
+	if s != "0" && strings.HasPrefix(s, "0") {
+		return 0, fmt.Errorf("invalid full move clock: %s", s)
+	}
+
 	n, err := strconv.ParseUint(s, 10, 16)
 	if err != nil {
-		return 0, fmt.Errorf("invalid fullmove number: %s", s)
+		return 0, fmt.Errorf("invalid full move number: %s", s)
 	}
 	return uint16(n), nil
+}
+
+func decodeBoard(s string) (chess.Board, error) {
+	var board chess.Board
+
+	// Ensure there are 8 rows.
+
+	rows := strings.Split(s, "/")
+	if len(rows) != 8 {
+		return board, fmt.Errorf("invalid board: not 8 rows")
+	}
+
+	// Ensure each row is non-empty.
+
+	for _, row := range rows {
+		if row == "" {
+			return board, fmt.Errorf("invalid board: empty row")
+		}
+	}
+
+	// Ensure no row has consecutive numbers.
+
+	for _, row := range rows {
+		var prev bool
+		for _, c := range row {
+			switch c {
+			case '1', '2', '3', '4', '5', '6', '7', '8':
+				if prev {
+					return board, fmt.Errorf("invalid board: consecutive numbers")
+				}
+				prev = true
+			default:
+				prev = false
+			}
+		}
+	}
+
+	// Ensure all rows have exactly 8 squares.
+
+	for _, row := range rows {
+		var n int
+		for _, rne := range row {
+			switch rne {
+			case '1', '2', '3', '4', '5', '6', '7', '8':
+				n += int(rne - '0')
+			case 'p', 'n', 'b', 'r', 'q', 'k', 'P', 'N', 'B', 'R', 'Q', 'K':
+				n++
+			default:
+				return board, fmt.Errorf("invalid board: unknown rune")
+			}
+		}
+
+		if n != 8 {
+			return board, fmt.Errorf("invalid board: row without exactly 8 squares")
+		}
+	}
+
+	// Parse the board.
+	square := chess.A8
+	for _, rne := range s {
+		switch rne {
+		case '1', '2', '3', '4', '5', '6', '7', '8':
+			square += chess.Square(rne - '0') // advance rightwards
+		case '/':
+			square -= 16 // move to the leftmost square in the rank below
+		default:
+			piece, err := decodePiece(string(rne))
+			if err != nil {
+				return board, err
+			}
+			board.Put(piece, square)
+			square++
+		}
+	}
+
+	return board, nil
 }
