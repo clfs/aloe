@@ -81,6 +81,16 @@ func (s Square) Rank() Rank {
 	return Rank(s / 8)
 }
 
+// IsValid returns true if the square is between [A1] and [H8] inclusive.
+func (s Square) IsValid() bool {
+	return s < 64
+}
+
+// Bitboard returns a bitboard with only this square set.
+func (s Square) Bitboard() Bitboard {
+	return 1 << s
+}
+
 func SquareAt(f File, r Rank) Square {
 	return Square(uint8(r)*8 + uint8(f))
 }

@@ -11,3 +11,7 @@ const (
 	Queen
 	King
 )
+
+func (r Role) IsValid() bool {
+	return r <= King
+}

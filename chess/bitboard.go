@@ -1,5 +1,7 @@
 package chess
 
+import "math/bits"
+
 // Bitboard is a bitset of squares.
 // From LSB to MSB, the bits represent A1, B1, ..., H1, A2, ..., G8, H8.
 type Bitboard uint64
@@ -39,4 +41,8 @@ func (b *Bitboard) IsFull() bool {
 	return *b == ^Bitboard(0)
 }
 
-//
+// Square returns the lowest set square. It is invalid to call Square on an
+// empty bitboard.
+func (b *Bitboard) Square() Square {
+	return Square(bits.TrailingZeros64(uint64(*b)))
+}

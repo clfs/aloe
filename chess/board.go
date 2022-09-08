@@ -21,11 +21,6 @@ func NewBoard() Board {
 	}
 }
 
-// NewBoardFromFEN returns a new board from a FEN string.
-func NewBoardFromFEN(fen string) (*Board, error) {
-	return nil, nil
-}
-
 func (b *Board) ByRole(r Role) Bitboard {
 	switch r {
 	case Pawn:
@@ -49,6 +44,12 @@ func (b *Board) ByColor(c Color) Bitboard {
 		return b.White
 	}
 	return b.Black
+}
+
+// KingOf returns the square of the king of the given color.
+func (b *Board) KingOf(c Color) Square {
+	bb := b.ByColor(c) | b.Kings
+	return bb.Square()
 }
 
 // Put puts a piece on a square. Any piece already on the square is removed.

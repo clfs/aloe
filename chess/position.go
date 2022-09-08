@@ -24,7 +24,9 @@ func NewPosition() Position {
 
 // LegalMoves returns a list of legal moves.
 func (p *Position) LegalMoves() []Move {
-	return nil
+	var moves []Move
+
+	return moves
 }
 
 // IsLegalMove returns true if the move is legal in the position. It does not
