@@ -22,14 +22,6 @@ func NewPosition() Position {
 	}
 }
 
-func (p *Position) MarshalText() ([]byte, error) {
-	return nil, nil
-}
-
-func (p *Position) UnmarshalText(text []byte) error {
-	return nil
-}
-
 // LegalMoves returns a list of legal moves.
 func (p *Position) LegalMoves() []Move {
 	return nil

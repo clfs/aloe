@@ -5,16 +5,8 @@ import (
 	"testing"
 
 	"github.com/clfs/aloe/chess"
+	"github.com/clfs/aloe/fen"
 )
-
-func decode(t *testing.T, fen string) *chess.Position {
-	t.Helper()
-	var pos chess.Position
-	if err := pos.UnmarshalText([]byte(fen)); err != nil {
-		t.Fatal(err)
-	}
-	return &pos
-}
 
 var countTestCases = []struct {
 	fen   string
@@ -48,10 +40,13 @@ var countTestCases = []struct {
 
 func TestCount(t *testing.T) {
 	for _, tc := range countTestCases {
-		p := decode(t, tc.fen)
+		pos, err := fen.Decode(tc.fen)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		for depth, want := range tc.nodes {
-			got := Count(p, depth)
+			got := Count(&pos, depth)
 
 			if want != got {
 				t.Errorf("%s, depth %d: want %d, got %d", tc.fen, depth, want, got)
@@ -110,9 +105,7 @@ var divideTestCases = []struct {
 
 func TestDivide(t *testing.T) {
 	for _, tc := range divideTestCases {
-		var pos chess.Position
-
-		err := pos.UnmarshalText([]byte(tc.fen))
+		pos, err := fen.Decode(tc.fen)
 		if err != nil {
 			t.Fatal(err)
 		}
