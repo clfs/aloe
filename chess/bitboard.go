@@ -41,8 +41,8 @@ func (b *Bitboard) IsFull() bool {
 	return *b == ^Bitboard(0)
 }
 
-// Square returns the lowest set square. It is invalid to call Square on an
-// empty bitboard.
+// Square returns the square corresponding to the least significant set bit.
+// Calling Square on an empty Bitboard returns an invalid square.
 func (b *Bitboard) Square() Square {
 	return Square(bits.TrailingZeros64(uint64(*b)))
 }
