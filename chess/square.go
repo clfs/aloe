@@ -103,8 +103,8 @@ func (s Square) String() string {
 		return fmt.Sprintf("Square(%d)", s)
 	}
 
-	f := int('A') + int(s.File())
-	r := int('1') + int(s.Rank())
+	f := 'A' + s.File()
+	r := '1' + s.Rank()
 
 	return fmt.Sprintf("%c%c", f, r)
 }
