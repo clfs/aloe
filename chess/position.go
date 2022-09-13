@@ -64,17 +64,21 @@ func (p *Position) Undo(u *Undo) {
 
 // IsValid returns nil if the position is valid.
 func (p *Position) IsValid() error {
+	// The underlying board must be valid.
 	if err := p.Board.IsValid(); err != nil {
 		return err
 	}
 
-	if !p.EnPassantFlag && p.EnPassantSquare != 0 {
-		return fmt.Errorf("e.p disabled, but e.p. square is non-zero")
-	}
-
-	epRank := p.EnPassantSquare.Rank()
-	if p.EnPassantFlag && !(epRank == Rank3 || epRank == Rank6) {
-		return fmt.Errorf("e.p. enabled, but e.p. square not on third or sixth rank")
+	// The en passant flag and square must agree.
+	if p.EnPassantFlag {
+		r := p.EnPassantSquare.Rank()
+		if r != 3 && r != 6 {
+			return fmt.Errorf("invalid en passant square: %s", p.EnPassantSquare)
+		}
+	} else {
+		if p.EnPassantSquare != 0 {
+			return fmt.Errorf("en passant square is set but en passant flag is not set")
+		}
 	}
 
 	if !p.CastleRights.IsValid() {

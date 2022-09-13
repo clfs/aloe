@@ -202,7 +202,7 @@ func (b *Board) IsValid() error {
 		return fmt.Errorf("kings are touching")
 	}
 
-	// Requirement: At most one king is in check.
+	// Requirement: Both kings are not simultaneously in check.
 
 	// Requirement: No pawns are on the first or eighth rank.
 
