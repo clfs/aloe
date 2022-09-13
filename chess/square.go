@@ -1,5 +1,7 @@
 package chess
 
+import "fmt"
+
 // Square is a square on a chess board.
 type Square uint8
 
@@ -89,6 +91,22 @@ func (s Square) IsValid() bool {
 // Bitboard returns a bitboard with only this square set.
 func (s Square) Bitboard() Bitboard {
 	return 1 << s
+}
+
+// IsAdjacentTo returns true if the square is adjacent to the other square.
+func (s Square) IsAdjacentTo(other Square) bool {
+	return false
+}
+
+func (s Square) String() string {
+	if !s.IsValid() {
+		return fmt.Sprintf("Square(%d)", s)
+	}
+
+	f := int('A') + int(s.File())
+	r := int('1') + int(s.Rank())
+
+	return fmt.Sprintf("%c%c", f, r)
 }
 
 func SquareAt(f File, r Rank) Square {

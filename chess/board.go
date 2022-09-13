@@ -1,5 +1,9 @@
 package chess
 
+import (
+	"fmt"
+)
+
 type Board struct {
 	// Bitboards for pieces by color.
 	White, Black Bitboard
@@ -125,4 +129,94 @@ func (b *Board) At(s Square) (Piece, bool) {
 	}
 
 	return p, true
+}
+
+// IsValid returns nil if the board is valid.
+func (b *Board) IsValid() error {
+	// Requirement: Each square is either empty or occupied.
+
+	for s := A1; s <= H8; s++ {
+		var nColors, nRoles int
+
+		for _, bb := range []Bitboard{b.White, b.Black} {
+			if bb.Get(s) {
+				nColors++
+			}
+		}
+
+		for _, bb := range []Bitboard{b.Pawns, b.Knights, b.Bishops, b.Rooks, b.Queens, b.Kings} {
+			if bb.Get(s) {
+				nRoles++
+			}
+		}
+
+		switch {
+		case nColors == 1 && nRoles == 1:
+			// OK; occupied.
+		case nColors == 0 && nRoles == 0:
+			// OK; empty.
+		default:
+			return fmt.Errorf("square %v has invalid occupancy", s)
+		}
+	}
+
+	// Requirement: There is one white king and one black king.
+
+	var (
+		whiteKingSquare Square
+		blackKingSquare Square
+		whiteKingSeen   bool
+		blackKingSeen   bool
+	)
+
+	for s := A1; s <= H8; s++ {
+		if !b.Kings.Get(s) {
+			continue
+		}
+
+		switch {
+		case b.White.Get(s):
+			if whiteKingSeen {
+				return fmt.Errorf("multiple white kings")
+			}
+			whiteKingSquare, whiteKingSeen = s, true
+
+		case b.Black.Get(s):
+			if blackKingSeen {
+				return fmt.Errorf("multiple black kings")
+			}
+			blackKingSquare, blackKingSeen = s, true
+		}
+	}
+
+	if !whiteKingSeen {
+		return fmt.Errorf("no white king")
+	}
+	if !blackKingSeen {
+		return fmt.Errorf("no black king")
+	}
+
+	// Requirement: The kings are not touching.
+
+	if whiteKingSquare.IsAdjacentTo(blackKingSquare) {
+		return fmt.Errorf("kings are touching")
+	}
+
+	// Requirement: At most one king is in check.
+
+	// Requirement: No pawns are on the first or eighth rank.
+
+	for s := A1; s <= A8; s++ {
+		if b.Pawns.Get(s) {
+			return fmt.Errorf("pawn on square %v", s)
+		}
+	}
+
+	for s := H1; s <= H8; s++ {
+		if b.Pawns.Get(s) {
+			return fmt.Errorf("pawn on square %v", s)
+		}
+	}
+
+	return nil
 }

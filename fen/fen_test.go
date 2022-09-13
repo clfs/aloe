@@ -3,6 +3,7 @@ package fen
 import (
 	"testing"
 
+	fuzz "github.com/AdaLogics/go-fuzz-headers"
 	"github.com/clfs/aloe/chess"
 	"github.com/google/go-cmp/cmp"
 )
@@ -71,6 +72,31 @@ func FuzzRoundTrip(f *testing.F) {
 
 		if old != new {
 			t.Errorf("changed after round trip: old %q, new %q", old, new)
+		}
+	})
+}
+
+func FuzzEncodeThenDecode(f *testing.F) {
+	f.Fuzz(func(t *testing.T, data []byte) {
+		var pos chess.Position
+
+		c := fuzz.NewConsumer(data)
+		if err := c.GenerateStruct(&pos); err != nil {
+			return
+		}
+
+		fen, err := Encode(pos)
+		if err != nil {
+			t.Skip() // Not encodable.
+		}
+
+		pos2, err := Decode(fen)
+		if err != nil {
+			t.Errorf("failed to decode %q: %v", fen, err)
+		}
+
+		if diff := cmp.Diff(pos, pos2); diff != "" {
+			t.Errorf("changed after round trip: (-old, +new):\n%s", diff)
 		}
 	})
 }

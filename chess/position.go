@@ -1,5 +1,7 @@
 package chess
 
+import "fmt"
+
 // Position is a chess position.
 type Position struct {
 	Board        Board
@@ -58,4 +60,26 @@ func (p *Position) Undo(u *Undo) {
 
 	// Restore castling rights.
 	p.CastleRights = u.CastleRights
+}
+
+// IsValid returns nil if the position is valid.
+func (p *Position) IsValid() error {
+	if err := p.Board.IsValid(); err != nil {
+		return err
+	}
+
+	if !p.EnPassantFlag && p.EnPassantSquare != 0 {
+		return fmt.Errorf("e.p disabled, but e.p. square is non-zero")
+	}
+
+	epRank := p.EnPassantSquare.Rank()
+	if p.EnPassantFlag && !(epRank == Rank3 || epRank == Rank6) {
+		return fmt.Errorf("e.p. enabled, but e.p. square not on third or sixth rank")
+	}
+
+	if !p.CastleRights.IsValid() {
+		return fmt.Errorf("invalid castling rights")
+	}
+
+	return nil
 }

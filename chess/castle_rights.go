@@ -27,3 +27,7 @@ func (c *CastleRights) Remove(other CastleRights) {
 func (c *CastleRights) Add(other CastleRights) {
 	*c |= other
 }
+
+func (c *CastleRights) IsValid() bool {
+	return *c <= NewCastleRights()
+}
