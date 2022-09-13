@@ -9,3 +9,10 @@ const (
 	White Color = false
 	Black Color = true
 )
+
+func (c Color) String() string {
+	if c {
+		return "Black"
+	}
+	return "White"
+}
