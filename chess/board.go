@@ -6,53 +6,53 @@ import (
 
 type Board struct {
 	// Bitboards for pieces by color.
-	White, Black Bitboard
+	white, black Bitboard
 	// Bitboards for pieces by role.
-	Pawns, Knights, Bishops, Rooks, Queens, Kings Bitboard
+	pawns, knights, bishops, rooks, queens, kings Bitboard
 }
 
 // NewBoard returns a new board with all pieces in their starting positions.
 func NewBoard() Board {
 	return Board{
-		White:   Bitboard(0x0000_0000_0000_FFFF),
-		Black:   Bitboard(0xFFFF_0000_0000_0000),
-		Pawns:   Bitboard(0x00FF_0000_0000_FF00),
-		Knights: Bitboard(0x4200_0000_0000_0042),
-		Bishops: Bitboard(0x2400_0000_0000_0024),
-		Rooks:   Bitboard(0x8100_0000_0000_0081),
-		Queens:  Bitboard(0x0800_0000_0000_0008),
-		Kings:   Bitboard(0x1000_0000_0000_0010),
+		white:   Bitboard(0x0000_0000_0000_FFFF),
+		black:   Bitboard(0xFFFF_0000_0000_0000),
+		pawns:   Bitboard(0x00FF_0000_0000_FF00),
+		knights: Bitboard(0x4200_0000_0000_0042),
+		bishops: Bitboard(0x2400_0000_0000_0024),
+		rooks:   Bitboard(0x8100_0000_0000_0081),
+		queens:  Bitboard(0x0800_0000_0000_0008),
+		kings:   Bitboard(0x1000_0000_0000_0010),
 	}
 }
 
 func (b *Board) ByRole(r Role) Bitboard {
 	switch r {
 	case Pawn:
-		return b.Pawns
+		return b.pawns
 	case Knight:
-		return b.Knights
+		return b.knights
 	case Bishop:
-		return b.Bishops
+		return b.bishops
 	case Rook:
-		return b.Rooks
+		return b.rooks
 	case Queen:
-		return b.Queens
+		return b.queens
 	default: // King
-		return b.Kings
+		return b.kings
 	}
 }
 
 // ByColor returns a bitboard of pieces by color.
 func (b *Board) ByColor(c Color) Bitboard {
 	if c == White {
-		return b.White
+		return b.white
 	}
-	return b.Black
+	return b.black
 }
 
 // KingOf returns the square of the king of the given color.
 func (b *Board) KingOf(c Color) Square {
-	bb := b.ByColor(c) | b.Kings
+	bb := b.ByColor(c) | b.kings
 	return bb.Square()
 }
 
@@ -67,37 +67,37 @@ func (b *Board) Put(p Piece, s Square) {
 func (b *Board) PutDangerous(p Piece, s Square) {
 	switch p.Color {
 	case White:
-		b.White.Set(s)
+		b.white.Set(s)
 	default: // Black
-		b.Black.Set(s)
+		b.black.Set(s)
 	}
 
 	switch p.Role {
 	case Pawn:
-		b.Pawns.Set(s)
+		b.pawns.Set(s)
 	case Knight:
-		b.Knights.Set(s)
+		b.knights.Set(s)
 	case Bishop:
-		b.Bishops.Set(s)
+		b.bishops.Set(s)
 	case Rook:
-		b.Rooks.Set(s)
+		b.rooks.Set(s)
 	case Queen:
-		b.Queens.Set(s)
+		b.queens.Set(s)
 	default: // King
-		b.Kings.Set(s)
+		b.kings.Set(s)
 	}
 }
 
 // Remove removes a piece from the square, if any.
 func (b *Board) Remove(s Square) {
-	b.White.Clear(s)
-	b.Black.Clear(s)
-	b.Pawns.Clear(s)
-	b.Knights.Clear(s)
-	b.Bishops.Clear(s)
-	b.Rooks.Clear(s)
-	b.Queens.Clear(s)
-	b.Kings.Clear(s)
+	b.white.Clear(s)
+	b.black.Clear(s)
+	b.pawns.Clear(s)
+	b.knights.Clear(s)
+	b.bishops.Clear(s)
+	b.rooks.Clear(s)
+	b.queens.Clear(s)
+	b.kings.Clear(s)
 }
 
 // At returns the piece on the square, if any.
@@ -105,24 +105,24 @@ func (b *Board) At(s Square) (Piece, bool) {
 	var p Piece
 
 	switch {
-	case b.White.Get(s):
+	case b.white.Get(s):
 		p.Color = White
-	case b.Black.Get(s):
+	case b.black.Get(s):
 		p.Color = Black
 	default:
 		return p, false
 	}
 
 	switch {
-	case b.Pawns.Get(s):
+	case b.pawns.Get(s):
 		p.Role = Pawn
-	case b.Knights.Get(s):
+	case b.knights.Get(s):
 		p.Role = Knight
-	case b.Bishops.Get(s):
+	case b.bishops.Get(s):
 		p.Role = Bishop
-	case b.Rooks.Get(s):
+	case b.rooks.Get(s):
 		p.Role = Rook
-	case b.Queens.Get(s):
+	case b.queens.Get(s):
 		p.Role = Queen
 	default: // b.kings.Get(s)
 		p.Role = King
@@ -138,13 +138,13 @@ func (b *Board) IsValid() error {
 	for s := A1; s <= H8; s++ {
 		var nColors, nRoles int
 
-		for _, bb := range []Bitboard{b.White, b.Black} {
+		for _, bb := range []Bitboard{b.white, b.black} {
 			if bb.Get(s) {
 				nColors++
 			}
 		}
 
-		for _, bb := range []Bitboard{b.Pawns, b.Knights, b.Bishops, b.Rooks, b.Queens, b.Kings} {
+		for _, bb := range []Bitboard{b.pawns, b.knights, b.bishops, b.rooks, b.queens, b.kings} {
 			if bb.Get(s) {
 				nRoles++
 			}
@@ -170,18 +170,18 @@ func (b *Board) IsValid() error {
 	)
 
 	for s := A1; s <= H8; s++ {
-		if !b.Kings.Get(s) {
+		if !b.kings.Get(s) {
 			continue
 		}
 
 		switch {
-		case b.White.Get(s):
+		case b.white.Get(s):
 			if whiteKingSeen {
 				return fmt.Errorf("multiple white kings")
 			}
 			whiteKingSquare, whiteKingSeen = s, true
 
-		case b.Black.Get(s):
+		case b.black.Get(s):
 			if blackKingSeen {
 				return fmt.Errorf("multiple black kings")
 			}
@@ -207,13 +207,13 @@ func (b *Board) IsValid() error {
 	// Requirement: No pawns are on the first or eighth rank.
 
 	for s := A1; s <= A8; s++ {
-		if b.Pawns.Get(s) {
+		if b.pawns.Get(s) {
 			return fmt.Errorf("pawn on square %v", s)
 		}
 	}
 
 	for s := H1; s <= H8; s++ {
-		if b.Pawns.Get(s) {
+		if b.pawns.Get(s) {
 			return fmt.Errorf("pawn on square %v", s)
 		}
 	}
