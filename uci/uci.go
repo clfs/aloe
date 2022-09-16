@@ -144,7 +144,13 @@ func (c *Client) handleUCINewGame() error {
 
 // handlePosition handles the "position" UCI command.
 func (c *Client) handlePosition(line string) error {
-	return nil // TODO: implement
+	fen, err := parsePosition(line)
+	if err != nil {
+		return err
+	}
+
+	c.fen = fen
+	return nil
 }
 
 // handleGo handles the "go" UCI command.
@@ -189,4 +195,13 @@ func (c *Client) handleUnknown(line string) error {
 	default:
 		return fmt.Errorf("unknown command: %s", fields[0])
 	}
+}
+
+// parsePosition parses a "position" UCI command and returns the FEN string it represents.
+func parsePosition(line string) (string, error) {
+	if line == "position startpos" {
+		return fen.StartingFEN, nil
+	}
+
+	return "", fmt.Errorf("unimplemented: %s", line) // TODO: implement
 }
