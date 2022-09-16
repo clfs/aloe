@@ -1,7 +1,11 @@
 // Package uci implements the Universal Chess Interface (UCI) protocol.
 package uci
 
-import "context"
+import (
+	"bytes"
+	"context"
+	"fmt"
+)
 
 // Engine is the interface that a chess engine must implement for compatibility
 // with this package. Aloe's engine implements this interface.
@@ -12,8 +16,24 @@ type Engine interface {
 
 // ID represents the "id" UCI command.
 type ID struct {
-	Name    string
-	Authors []string
+	Name   string
+	Author string
+}
+
+func (id *ID) MarshalText() ([]byte, error) {
+	if id.Name == "" {
+		return nil, fmt.Errorf("no name provided")
+	}
+	if id.Author == "" {
+		return nil, fmt.Errorf("no author provided")
+	}
+
+	var b bytes.Buffer
+
+	fmt.Fprintf(&b, "id name %s\n", id.Name)
+	fmt.Fprintf(&b, "id author %s\n", id.Author)
+
+	return b.Bytes(), nil
 }
 
 // Go represents the "go" UCI command.

@@ -16,8 +16,8 @@ func New() *Engine {
 // UCIID identifies the engine to the UCI protocol.
 func UCIID() uci.ID {
 	return uci.ID{
-		Name:    "Aloe",
-		Authors: []string{"Calvin Figuereo-Supraner"},
+		Name:   "Aloe",
+		Author: "Calvin Figuereo-Supraner",
 	}
 }
 
