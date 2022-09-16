@@ -12,7 +12,7 @@ func New() *Engine {
 }
 
 // UCIID identifies the engine to the UCI protocol.
-func UCIID() uci.ID {
+func (e *Engine) UCIID() uci.ID {
 	return uci.ID{
 		Name:   "Aloe",
 		Author: "Calvin Figuereo-Supraner",
@@ -20,7 +20,7 @@ func UCIID() uci.ID {
 }
 
 // UCIGo runs a search with the provided parameters. The results are encoded in
-// a UCI-compatible format.
-func UCIGo(g uci.Go, ch <-chan uci.Info) error {
+// a UCI-compatible format. The search is terminated when the channel is closed.
+func (e *Engine) UCIGo(g uci.Go, ch <-chan uci.Info) error {
 	return nil // TODO: implement
 }

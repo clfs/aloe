@@ -2,8 +2,11 @@
 package uci
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"io"
+	"strings"
 )
 
 // Engine is the interface that a chess engine must implement for compatibility
@@ -30,7 +33,7 @@ func (id *ID) MarshalText() ([]byte, error) {
 	var b bytes.Buffer
 
 	fmt.Fprintf(&b, "id name %s\n", id.Name)
-	fmt.Fprintf(&b, "id author %s\n", id.Author)
+	fmt.Fprintf(&b, "id author %s", id.Author)
 
 	return b.Bytes(), nil
 }
@@ -72,4 +75,125 @@ type Info struct {
 	PV        []string // The best line found ("principal variation").
 	Score     int      // The score from the engine's point of view.
 	ScoreType string   // Either ScoreTypeCentipawn or ScoreTypeMate.
+}
+
+// Client is a wrapper around a UCI-compatible engine.
+type Client struct {
+	e  Engine
+	w  io.Writer
+	ch chan Info
+}
+
+// NewClient returns a new [Client] that writes UCI responses to w.
+func NewClient(e Engine, w io.Writer) *Client {
+	return &Client{e: e, w: w}
+}
+
+// Run reads commands from r and executes them.
+func (c *Client) Run(r io.Reader) error {
+	s := bufio.NewScanner(r)
+
+	for s.Scan() {
+		line := s.Text()
+
+		var err error
+
+		switch line {
+		case "quit":
+			return c.handleQuit()
+		case "uci":
+			err = c.handleUCI()
+		case "isready":
+			err = c.handleIsReady()
+		case "ucinewgame":
+			err = c.handleUCINewGame()
+		case "position":
+			err = c.handlePosition(line)
+		case "go":
+			err = c.handleGo(line)
+		case "stop":
+			err = c.handleStop()
+		default:
+			err = c.handleUnknown(line)
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return s.Err()
+}
+
+// handleUCI handles the "uci" UCI command.
+func (c *Client) handleUCI() error {
+	id := c.e.UCIID()
+
+	text, err := id.MarshalText()
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(c.w, "%s\n", text)
+	fmt.Fprintf(c.w, "uciok\n")
+
+	return nil
+}
+
+// handleIsReady handles the "isready" UCI command.
+func (c *Client) handleIsReady() error {
+	fmt.Fprintf(c.w, "readyok\n")
+
+	return nil
+}
+
+// handleUCINewGame handles the "ucinewgame" UCI command.
+func (c *Client) handleUCINewGame() error {
+	return nil // TODO: implement
+}
+
+// handlePosition handles the "position" UCI command.
+func (c *Client) handlePosition(line string) error {
+	return nil // TODO: implement
+}
+
+// handleGo handles the "go" UCI command.
+func (c *Client) handleGo(line string) error {
+	if c.ch != nil {
+		return fmt.Errorf("search already in progress")
+	}
+	return nil // TODO: implement
+}
+
+// handleStop handles the "stop" UCI command.
+func (c *Client) handleStop() error {
+	if c.ch != nil {
+		close(c.ch)
+	}
+
+	return nil
+}
+
+// handleQuit handles the "quit" UCI command.
+func (c *Client) handleQuit() error {
+	if c.ch != nil {
+		close(c.ch)
+	}
+
+	return nil
+}
+
+// handleUnknown handles an unknown UCI command.
+func (c *Client) handleUnknown(line string) error {
+	// Ignore valid commands that aren't implemented.
+	if line == "debug" || line == "setoption" || line == "register" || line == "ponderhit" {
+		return nil
+	}
+
+	// Ignore empty lines.
+	if strings.TrimSpace(line) == "" {
+		return nil
+	}
+
+	return fmt.Errorf("unknown command: %s", line)
 }
