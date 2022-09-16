@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/clfs/aloe/fen"
 )
 
 // Engine is the interface that a chess engine must implement for compatibility
@@ -72,21 +74,26 @@ const (
 // Info represents the "info" UCI command.
 type Info struct {
 	Depth     int      // Search depth in plies.
-	PV        []string // The best line found ("principal variation").
-	Score     int      // The score from the engine's point of view.
+	PV        []string // Best line found ("principal variation").
+	Score     int      // Score from the engine's point of view.
 	ScoreType string   // Either ScoreTypeCentipawn or ScoreTypeMate.
 }
 
 // Client is a wrapper around a UCI-compatible engine.
 type Client struct {
-	e  Engine
-	w  io.Writer
-	ch chan Info
+	e   Engine
+	w   io.Writer // For UCI output.
+	ch  chan Info // Channel for search info.
+	fen string    // Position under analysis.
 }
 
 // NewClient returns a new [Client] that writes UCI responses to w.
 func NewClient(e Engine, w io.Writer) *Client {
-	return &Client{e: e, w: w}
+	return &Client{
+		e:   e,
+		w:   w,
+		fen: fen.StartingFEN,
+	}
 }
 
 // Run reads commands from r and executes them.
