@@ -105,23 +105,27 @@ func (c *Client) Run(r io.Reader) error {
 
 		var err error
 
-		switch line {
-		case "quit":
-			return c.handleQuit()
-		case "uci":
-			err = c.handleUCI()
-		case "isready":
-			err = c.handleIsReady()
-		case "ucinewgame":
-			err = c.handleUCINewGame()
-		case "position":
-			err = c.handlePosition(line)
-		case "go":
-			err = c.handleGo(line)
-		case "stop":
-			err = c.handleStop()
+		switch {
 		default:
 			err = c.handleUnknown(line)
+
+		// Single-word commands.
+		case line == "quit":
+			return c.handleQuit() // early exit!
+		case line == "uci":
+			err = c.handleUCI()
+		case line == "isready":
+			err = c.handleIsReady()
+		case line == "ucinewgame":
+			err = c.handleUCINewGame()
+		case line == "stop":
+			err = c.handleStop()
+
+		// Multi-word commands.
+		case strings.HasPrefix(line, "position "):
+			err = c.handlePosition(line)
+		case strings.HasPrefix(line, "go "):
+			err = c.handleGo(line)
 		}
 
 		if err != nil {
@@ -192,15 +196,18 @@ func (c *Client) handleQuit() error {
 
 // handleUnknown handles an unknown UCI command.
 func (c *Client) handleUnknown(line string) error {
-	// Ignore valid commands that aren't implemented.
-	if line == "debug" || line == "setoption" || line == "register" || line == "ponderhit" {
-		return nil
-	}
+	fields := strings.Fields(line)
 
 	// Ignore empty lines.
-	if strings.TrimSpace(line) == "" {
+	if len(fields) == 0 {
 		return nil
 	}
 
-	return fmt.Errorf("unknown command: %s", line)
+	// Ignore valid but unimplemented commands.
+	switch fields[0] {
+	case "debug", "setoption", "register", "ponderhit":
+		return nil
+	default:
+		return fmt.Errorf("unknown command: %s", fields[0])
+	}
 }
