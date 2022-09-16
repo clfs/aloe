@@ -3,7 +3,6 @@ package uci
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 )
 
@@ -11,7 +10,7 @@ import (
 // with this package. Aloe's engine implements this interface.
 type Engine interface {
 	UCIID() ID
-	UCIGo(ctx context.Context, g Go) (Info, error)
+	UCIGo(g Go, ch <-chan Info) error
 }
 
 // ID represents the "id" UCI command.
@@ -40,10 +39,6 @@ func (id *ID) MarshalText() ([]byte, error) {
 type Go struct {
 	FEN        string
 	Parameters Parameters
-
-	// Engines may implement streaming by running this function on
-	// each intermediate search result.
-	OnUpdate func(Info)
 }
 
 // Parameters describes search parameters for the "go" UCI command.
