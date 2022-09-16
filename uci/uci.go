@@ -200,16 +200,12 @@ func (c *Client) handleUnknown(line string) error {
 
 // parsePosition parses a "position" UCI command and returns the FEN string it represents.
 func parsePosition(line string) (string, error) {
-	var (
-		initialFEN string   // The initial FEN to start from.
-		moves      []string // Applied to the initial FEN in order.
-	)
+	var res string // The FEN to return.
 
 	fields := strings.Fields(line)
 
 	// A valid position command must be at least 2 words long, and the first
 	// word must be "position".
-
 	if len(fields) < 2 || fields[0] != "position" {
 		return "", fmt.Errorf("invalid position command: %s", line)
 	}
@@ -217,13 +213,12 @@ func parsePosition(line string) (string, error) {
 
 	// The next word must be "startpos" or "fen". If it's "fen", read farther
 	// ahead to get the initial FEN.
-
 	switch fields[0] {
 	case "startpos":
-		initialFEN = fen.StartingFEN
+		res = fen.StartingFEN
 		fields = fields[2:]
 	case "fen":
-		initialFEN = strings.Join(fields[2:8], " ")
+		res = strings.Join(fields[2:8], " ")
 		fields = fields[8:]
 	default:
 		return "", fmt.Errorf("invalid position command: %s", line)
@@ -232,6 +227,7 @@ func parsePosition(line string) (string, error) {
 	// If there are remaining words, they must be moves to apply to the initial
 	// FEN. Notably, providing "moves" as the final word is interpreted as an
 	// empty move list.
+	var moves []string
 
 	if len(fields) > 0 {
 		if fields[0] != "moves" {
@@ -242,28 +238,26 @@ func parsePosition(line string) (string, error) {
 		}
 	}
 
-	// Decode the initial FEN, apply any moves, then encode the position back to
-	// a final FEN.
-
-	pos, err := fen.Decode(initialFEN)
+	// Decode the current FEN.
+	pos, err := fen.Decode(res)
 	if err != nil {
 		return "", fmt.Errorf("invalid position command: %v", err)
 	}
 
+	// Apply moves, if any.
 	for _, m := range moves {
 		move, err := chess.NewMove(m)
 		if err != nil {
 			return "", fmt.Errorf("invalid position command: %v", err)
 		}
-
 		// TODO: This isn't guaranteed to be legal.
 		_ = pos.Move(move)
 	}
 
-	finalFEN, err := fen.Encode(pos)
+	// Encode the resulting position back to a FEN and return it.
+	res, err = fen.Encode(pos)
 	if err != nil {
 		return "", fmt.Errorf("invalid position command: %v", err)
 	}
-
-	return finalFEN, nil
+	return res, nil
 }
