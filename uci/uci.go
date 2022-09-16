@@ -95,15 +95,16 @@ func (c *Client) Run(r io.Reader) error {
 
 		// Single-word commands.
 		case line == "quit":
-			return c.handleQuit() // early exit!
+			c.handleQuit()
+			return nil // early exit!
 		case line == "uci":
-			err = c.handleUCI()
+			c.handleUCI()
 		case line == "isready":
-			err = c.handleIsReady()
+			c.handleIsReady()
 		case line == "ucinewgame":
-			err = c.handleUCINewGame()
+			c.handleUCINewGame()
 		case line == "stop":
-			err = c.handleStop()
+			c.handleStop()
 
 		// Multi-word commands.
 		case strings.HasPrefix(line, "position "):
@@ -121,30 +122,24 @@ func (c *Client) Run(r io.Reader) error {
 }
 
 // handleUCI handles the "uci" UCI command.
-func (c *Client) handleUCI() error {
+func (c *Client) handleUCI() {
 	id := c.e.UCIID()
-
 	fmt.Fprintf(c.w, "id name %s\n", id.Name)
 	fmt.Fprintf(c.w, "id author %s\n", id.Author)
 	fmt.Fprintf(c.w, "uciok\n")
-
-	return nil
 }
 
 // handleIsReady handles the "isready" UCI command.
-func (c *Client) handleIsReady() error {
+func (c *Client) handleIsReady() {
 	fmt.Fprintf(c.w, "readyok\n")
-
-	return nil
 }
 
 // handleUCINewGame handles the "ucinewgame" UCI command.
-func (c *Client) handleUCINewGame() error {
+func (c *Client) handleUCINewGame() {
 	if c.ch != nil {
 		close(c.ch)
 	}
 	c.fen = fen.StartingFEN
-	return nil
 }
 
 // handlePosition handles the "position" UCI command.
@@ -153,7 +148,6 @@ func (c *Client) handlePosition(line string) error {
 	if err != nil {
 		return err
 	}
-
 	c.fen = fen
 	return nil
 }
@@ -167,21 +161,17 @@ func (c *Client) handleGo(line string) error {
 }
 
 // handleStop handles the "stop" UCI command.
-func (c *Client) handleStop() error {
+func (c *Client) handleStop() {
 	if c.ch != nil {
 		close(c.ch)
 	}
-
-	return nil
 }
 
 // handleQuit handles the "quit" UCI command.
-func (c *Client) handleQuit() error {
+func (c *Client) handleQuit() {
 	if c.ch != nil {
 		close(c.ch)
 	}
-
-	return nil
 }
 
 // handleUnknown handles an unknown UCI command.
