@@ -3,7 +3,6 @@ package uci
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -24,23 +23,7 @@ type ID struct {
 	Author string
 }
 
-func (id *ID) MarshalText() ([]byte, error) {
-	if id.Name == "" {
-		return nil, fmt.Errorf("no name provided")
-	}
-	if id.Author == "" {
-		return nil, fmt.Errorf("no author provided")
-	}
-
-	var b bytes.Buffer
-
-	fmt.Fprintf(&b, "id name %s\n", id.Name)
-	fmt.Fprintf(&b, "id author %s", id.Author)
-
-	return b.Bytes(), nil
-}
-
-// Go represents the "go" UCI command.
+// Go represents the "go" UCI command. It's also tagged with the FEN to analyze.
 type Go struct {
 	FEN        string
 	Parameters Parameters
@@ -140,12 +123,8 @@ func (c *Client) Run(r io.Reader) error {
 func (c *Client) handleUCI() error {
 	id := c.e.UCIID()
 
-	text, err := id.MarshalText()
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintf(c.w, "%s\n", text)
+	fmt.Fprintf(c.w, "id name %s\n", id.Name)
+	fmt.Fprintf(c.w, "id author %s\n", id.Author)
 	fmt.Fprintf(c.w, "uciok\n")
 
 	return nil
