@@ -140,7 +140,11 @@ func (c *Client) handleIsReady() error {
 
 // handleUCINewGame handles the "ucinewgame" UCI command.
 func (c *Client) handleUCINewGame() error {
-	return nil // TODO: implement
+	if c.ch != nil {
+		close(c.ch)
+	}
+	c.fen = fen.StartingFEN
+	return nil
 }
 
 // handlePosition handles the "position" UCI command.
