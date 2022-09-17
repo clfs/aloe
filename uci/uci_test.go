@@ -4,62 +4,51 @@ import (
 	"testing"
 
 	"github.com/clfs/aloe/fen"
+	"github.com/google/go-cmp/cmp"
 )
 
-func TestParsePosition(t *testing.T) {
+func TestPosition_UnmarshalText(t *testing.T) {
 	cases := []struct {
-		in      string
-		want    string
+		in      []byte
+		want    Position
 		wantErr bool
 	}{
 		{
-			in:   "position startpos",
-			want: fen.StartingFEN,
-		},
-		{
-			in:   "position startpos moves",
-			want: fen.StartingFEN,
-		},
-		{
-			in:   "position startpos moves e2e4",
-			want: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1",
-		},
-		{
-			in:   "position fen rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1",
-			want: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1",
-		},
-		{
-			in:   "position fen rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1 moves e2e4",
-			want: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1",
-		},
-		{
-			in:   "position fen rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5",
-			want: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1",
-		},
-		{
-			in:      "position",
-			wantErr: true,
-		},
-		{
-			in:      "position startpos moves e5e6",
-			wantErr: true,
-		},
-		{
-			in:      "position fen",
-			wantErr: true,
-		},
-		{
-			in:      "position fen rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1 moves a1h8",
-			wantErr: true,
+			in:   []byte("position startpos"),
+			want: Position{FEN: fen.StartingFEN},
 		},
 	}
-	for _, tc := range cases {
-		got, err := ParsePosition(tc.in)
-		if (err != nil) != tc.wantErr {
-			t.Errorf("%q: incorrect error value: %v", tc.in, err)
+
+	for _, c := range cases {
+		var got Position
+		if err := got.UnmarshalText(c.in); c.wantErr != (err != nil) {
+			t.Errorf("%q: wantErr = %t, but error: %v", c.in, c.wantErr, err)
 		}
-		if tc.want != got {
-			t.Errorf("%q: want %q, got %q", tc.in, tc.want, got)
+		if diff := cmp.Diff(c.want, got); diff != "" {
+			t.Errorf("%q: (-want, +got)\n%s", c.in, diff)
+		}
+	}
+}
+
+func TestGo_UnmarshalText(t *testing.T) {
+	cases := []struct {
+		in      []byte
+		want    Go
+		wantErr bool
+	}{
+		{
+			in:   []byte("go"),
+			want: Go{Infinite: true},
+		},
+	}
+
+	for _, c := range cases {
+		var got Go
+		if err := got.UnmarshalText(c.in); c.wantErr != (err != nil) {
+			t.Errorf("%q: wantErr = %t, but error: %v", c.in, c.wantErr, err)
+		}
+		if diff := cmp.Diff(c.want, got); diff != "" {
+			t.Errorf("%q: (-want, +got)\n%s", c.in, diff)
 		}
 	}
 }
