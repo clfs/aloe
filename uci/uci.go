@@ -14,8 +14,8 @@ import (
 // Engine is the interface that a chess engine must implement for compatibility
 // with this package. Aloe's engine implements this interface.
 type Engine interface {
-	UCIID() ID
-	UCIGo(g Go, ch <-chan Info) error
+	ID() ID
+	Search(p Position, g Go, ch <-chan Info) error
 }
 
 // ID represents the "id" UCI command.
@@ -24,15 +24,23 @@ type ID struct {
 	Author string
 }
 
-// Go represents the "go" UCI command. It's also tagged with the FEN to analyze.
-type Go struct {
-	FEN        string
-	Parameters Parameters
+// Position represents the "position" UCI command.
+type Position struct {
+	FEN   string
+	Moves []string
 }
 
-// Parameters describes search parameters for the "go" UCI command.
-type Parameters struct {
-	Moves []string // Restrict search to these moves only. Ignore if empty.
+// DefaultPosition is the default [Position] used when no "position" command is
+// available.
+var DefaultPosition = Position{FEN: fen.StartingFEN}
+
+func (p *Position) UnmarshalText(text []byte) error {
+	return nil // TODO: implement
+}
+
+// Go represents the "go" UCI command.
+type Go struct {
+	SearchMoves []string // Restrict search to these moves only. Ignore if empty.
 
 	Ponder   bool // Search in pondering mode.
 	Infinite bool // Search until interrupted.
@@ -47,6 +55,10 @@ type Parameters struct {
 	Nodes     int // If > 0, search this many nodes only.
 	Mate      int // If > 0, search for a mate in this many moves.
 	MovesToGo int // If > 0, there are this many moves until the next time control.
+}
+
+func (g *Go) UnmarshalText(text []byte) error {
+	return nil // TODO: implement
 }
 
 // Score types used in [Info].
@@ -69,19 +81,19 @@ func (i *Info) String() string {
 
 // Client is a wrapper around a UCI-compatible engine.
 type Client struct {
-	e   Engine
-	w   io.Writer // For UCI output.
-	ch  chan Info // Channel for search info.
-	fen string    // Position under analysis.
+	e  Engine
+	w  io.Writer // For UCI output.
+	ch chan Info // Channel for search info.
+	p  Position  // Position command to use for search.
 }
 
 // NewClient returns a new [Client] that writes UCI responses to w.
 func NewClient(e Engine, w io.Writer) *Client {
 	return &Client{
-		e:   e,
-		w:   w,
-		ch:  make(chan Info),
-		fen: fen.StartingFEN,
+		e:  e,
+		w:  w,
+		ch: make(chan Info),
+		p:  DefaultPosition,
 	}
 }
 
@@ -128,7 +140,7 @@ func (c *Client) Run(r io.Reader) error {
 
 // handleUCI handles the "uci" UCI command.
 func (c *Client) handleUCI() {
-	id := c.e.UCIID()
+	id := c.e.ID()
 	fmt.Fprintf(c.w, "id name %s\n", id.Name)
 	fmt.Fprintf(c.w, "id author %s\n", id.Author)
 	fmt.Fprintf(c.w, "uciok\n")
@@ -142,17 +154,12 @@ func (c *Client) handleIsReady() {
 // handleUCINewGame handles the "ucinewgame" UCI command.
 func (c *Client) handleUCINewGame() {
 	close(c.ch)
-	c.fen = fen.StartingFEN
+	c.p = DefaultPosition
 }
 
 // handlePosition handles the "position" UCI command.
 func (c *Client) handlePosition(line string) error {
-	fen, err := ParsePosition(line)
-	if err != nil {
-		return err
-	}
-	c.fen = fen
-	return nil
+	return c.p.UnmarshalText([]byte(line))
 }
 
 // handleGo handles the "go" UCI command.
@@ -160,18 +167,17 @@ func (c *Client) handleGo(line string) error {
 	close(c.ch) // Cancel the existing search, if any.
 	c.ch = make(chan Info)
 
-	params, err := ParseGo(line)
-	if err != nil {
+	var g Go
+	if err := g.UnmarshalText([]byte(line)); err != nil {
 		return err
 	}
-	command := Go{c.fen, params}
 
 	// Send the command to the engine. Once the engine finishes, close the
 	// channel to signal that the search is over.
 	go func() {
 		defer close(c.ch)
 
-		if err := c.e.UCIGo(command, c.ch); err != nil {
+		if err := c.e.Search(c.p, g, c.ch); err != nil {
 			fmt.Fprintf(c.w, "failed search: %v\n", err)
 		}
 	}()
@@ -275,9 +281,4 @@ func ParsePosition(line string) (string, error) {
 		return "", fmt.Errorf("invalid position command: %v", err)
 	}
 	return res, nil
-}
-
-// ParseGo parses a "go" UCI command and returns the parameters it represents.
-func ParseGo(line string) (Parameters, error) {
-	return Parameters{}, nil // TODO: implement
 }
