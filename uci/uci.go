@@ -147,7 +147,7 @@ func (c *Client) handleUCINewGame() {
 
 // handlePosition handles the "position" UCI command.
 func (c *Client) handlePosition(line string) error {
-	fen, err := parsePosition(line)
+	fen, err := ParsePosition(line)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (c *Client) handleGo(line string) error {
 	close(c.ch) // Cancel the existing search, if any.
 	c.ch = make(chan Info)
 
-	params, err := parseGo(line)
+	params, err := ParseGo(line)
 	if err != nil {
 		return err
 	}
@@ -214,8 +214,8 @@ func (c *Client) handleUnknown(line string) error {
 	}
 }
 
-// parsePosition parses a "position" UCI command and returns the FEN string it represents.
-func parsePosition(line string) (string, error) {
+// ParsePosition parses a "position" UCI command and returns the FEN string it represents.
+func ParsePosition(line string) (string, error) {
 	var res string // The FEN to return.
 
 	fields := strings.Fields(line)
@@ -232,7 +232,6 @@ func parsePosition(line string) (string, error) {
 	switch fields[0] {
 	case "startpos":
 		res = fen.StartingFEN
-		fields = fields[2:]
 	case "fen":
 		res = strings.Join(fields[2:8], " ")
 		fields = fields[8:]
@@ -278,6 +277,7 @@ func parsePosition(line string) (string, error) {
 	return res, nil
 }
 
-func parseGo(line string) (Parameters, error) {
+// ParseGo parses a "go" UCI command and returns the parameters it represents.
+func ParseGo(line string) (Parameters, error) {
 	return Parameters{}, nil // TODO: implement
 }
