@@ -63,6 +63,10 @@ type Info struct {
 	ScoreType string   // Either ScoreTypeCentipawn or ScoreTypeMate.
 }
 
+func (i *Info) String() string {
+	return "todo" // implement
+}
+
 // Client is a wrapper around a UCI-compatible engine.
 type Client struct {
 	e   Engine
@@ -76,6 +80,7 @@ func NewClient(e Engine, w io.Writer) *Client {
 	return &Client{
 		e:   e,
 		w:   w,
+		ch:  make(chan Info),
 		fen: fen.StartingFEN,
 	}
 }
@@ -136,9 +141,7 @@ func (c *Client) handleIsReady() {
 
 // handleUCINewGame handles the "ucinewgame" UCI command.
 func (c *Client) handleUCINewGame() {
-	if c.ch != nil {
-		close(c.ch)
-	}
+	close(c.ch)
 	c.fen = fen.StartingFEN
 }
 
@@ -154,24 +157,43 @@ func (c *Client) handlePosition(line string) error {
 
 // handleGo handles the "go" UCI command.
 func (c *Client) handleGo(line string) error {
-	if c.ch != nil {
-		return fmt.Errorf("search already in progress")
+	close(c.ch) // Cancel the existing search, if any.
+	c.ch = make(chan Info)
+
+	params, err := parseGo(line)
+	if err != nil {
+		return err
 	}
-	return nil // TODO: implement
+	command := Go{c.fen, params}
+
+	// Send the command to the engine. Once the engine finishes, close the
+	// channel to signal that the search is over.
+	go func() {
+		defer close(c.ch)
+
+		if err := c.e.UCIGo(command, c.ch); err != nil {
+			fmt.Fprintf(c.w, "failed search: %v\n", err)
+		}
+	}()
+
+	// Write search results to the UCI output as they arrive.
+	go func() {
+		for info := range c.ch {
+			fmt.Fprintln(c.w, info)
+		}
+	}()
+
+	return nil
 }
 
 // handleStop handles the "stop" UCI command.
 func (c *Client) handleStop() {
-	if c.ch != nil {
-		close(c.ch)
-	}
+	close(c.ch)
 }
 
 // handleQuit handles the "quit" UCI command.
 func (c *Client) handleQuit() {
-	if c.ch != nil {
-		close(c.ch)
-	}
+	close(c.ch)
 }
 
 // handleUnknown handles an unknown UCI command.
@@ -254,4 +276,8 @@ func parsePosition(line string) (string, error) {
 		return "", fmt.Errorf("invalid position command: %v", err)
 	}
 	return res, nil
+}
+
+func parseGo(line string) (Parameters, error) {
+	return Parameters{}, nil // TODO: implement
 }
