@@ -107,13 +107,6 @@ type Info struct {
 	ScoreType string   // Either ScoreTypeCentipawn or ScoreTypeMate.
 }
 
-func (i *Info) String() string {
-	return fmt.Sprintf(
-		"info depth %d score %s %d pv %s",
-		i.Depth, i.ScoreType, i.Score, strings.Join(i.PV, " "),
-	)
-}
-
 // Client is a wrapper around a UCI-compatible engine.
 type Client struct {
 	e  Engine
@@ -220,7 +213,11 @@ func (c *Client) handleGo(line string) error {
 	// Write search results to the UCI output as they arrive.
 	go func() {
 		for info := range c.ch {
-			fmt.Fprintln(c.w, info)
+			fmt.Fprintf(c.w, "info ")
+			fmt.Fprintf(c.w, "depth %d ", info.Depth)
+			fmt.Fprintf(c.w, "score %s %d ", info.ScoreType, info.Score)
+			fmt.Fprintf(c.w, "pv %s", strings.Join(info.PV, " "))
+			fmt.Fprintf(c.w, "\n")
 		}
 	}()
 
