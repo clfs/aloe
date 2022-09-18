@@ -52,7 +52,7 @@ func (p *Position) UnmarshalText(text []byte) error {
 	if matches := rxPositionStartposMoves.FindSubmatch(text); matches != nil {
 		*p = Position{
 			FEN:   fen.StartingFEN,
-			Moves: strings.Split(string(matches[1]), " "),
+			Moves: strings.Fields(string(matches[1])),
 		}
 		return nil
 	}
@@ -61,7 +61,7 @@ func (p *Position) UnmarshalText(text []byte) error {
 	if matches := rxPositionFENMoves.FindSubmatch(text); matches != nil {
 		*p = Position{
 			FEN:   string(matches[1]),
-			Moves: strings.Split(string(matches[2]), " "),
+			Moves: strings.Fields(string(matches[2])),
 		}
 		return nil
 	}
