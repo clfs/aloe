@@ -102,13 +102,16 @@ const (
 // Info represents the "info" UCI command.
 type Info struct {
 	Depth     int      // Search depth in plies.
-	PV        []string // Best line found ("principal variation").
+	PV        []string // Moves in the principal variation.
 	Score     int      // Score from the engine's point of view.
 	ScoreType string   // Either ScoreTypeCentipawn or ScoreTypeMate.
 }
 
 func (i *Info) String() string {
-	return "todo" // implement
+	return fmt.Sprintf(
+		"info depth %d score %s %d pv %s",
+		i.Depth, i.ScoreType, i.Score, strings.Join(i.PV, " "),
+	)
 }
 
 // Client is a wrapper around a UCI-compatible engine.
