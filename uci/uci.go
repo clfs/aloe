@@ -37,15 +37,13 @@ var DefaultPosition = Position{FEN: fen.StartingFEN}
 
 // Regexes for parsing UCI "position" commands.
 var (
-	rxPositionStartpos      = regexp.MustCompile(`^position startpos$`)
 	rxPositionStartposMoves = regexp.MustCompile(`^position startpos moves (.+)$`)
 	rxPositionFENMoves      = regexp.MustCompile(`^position fen (.+) moves (.+)$`)
 	rxPositionFEN           = regexp.MustCompile(`^position fen (.+)$`)
 )
 
 func (p *Position) UnmarshalText(text []byte) error {
-	// position startpos
-	if rxPositionStartpos.Match(text) {
+	if string(text) == "position startpos" {
 		*p = Position{FEN: fen.StartingFEN}
 		return nil
 	}
