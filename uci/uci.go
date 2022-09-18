@@ -42,32 +42,28 @@ var (
 )
 
 func (p *Position) UnmarshalText(text []byte) error {
-	if string(text) == "position startpos" {
-		*p = Position{FEN: fen.StartingFEN}
+	s := string(text)
+
+	if s == "position startpos" {
+		*p = Position{fen.StartingFEN, nil}
 		return nil
 	}
 
 	// position startpos moves <moves>
-	if m := rgxPositionStartposMoves.FindSubmatch(text); m != nil {
-		*p = Position{
-			FEN:   fen.StartingFEN,
-			Moves: strings.Fields(string(m[1])),
-		}
+	if m := rgxPositionStartposMoves.FindStringSubmatch(s); m != nil {
+		*p = Position{fen.StartingFEN, strings.Fields(m[1])}
 		return nil
 	}
 
 	// position fen <fen> moves <moves>
-	if m := rgxPositionFENMoves.FindSubmatch(text); m != nil {
-		*p = Position{
-			FEN:   string(m[1]),
-			Moves: strings.Fields(string(m[2])),
-		}
+	if m := rgxPositionFENMoves.FindStringSubmatch(s); m != nil {
+		*p = Position{m[1], strings.Fields(m[2])}
 		return nil
 	}
 
 	// position fen <fen>
-	if m := rgxPositionFEN.FindSubmatch(text); m != nil {
-		*p = Position{FEN: string(m[1])}
+	if m := rgxPositionFEN.FindStringSubmatch(s); m != nil {
+		*p = Position{m[1], nil}
 		return nil
 	}
 
