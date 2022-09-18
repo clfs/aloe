@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/clfs/aloe/chess"
 	"github.com/clfs/aloe/fen"
 )
 
@@ -255,67 +254,4 @@ func (c *Client) handleUnknown(line string) error {
 	default:
 		return fmt.Errorf("unknown command: %s", fields[0])
 	}
-}
-
-// ParsePosition parses a "position" UCI command and returns the FEN string it represents.
-func ParsePosition(line string) (string, error) {
-	var res string // The FEN to return.
-
-	fields := strings.Fields(line)
-
-	// A valid position command must be at least 2 words long, and the first
-	// word must be "position".
-	if len(fields) < 2 || fields[0] != "position" {
-		return "", fmt.Errorf("invalid position command: %s", line)
-	}
-	fields = fields[1:]
-
-	// The next word must be "startpos" or "fen". If it's "fen", read farther
-	// ahead to get the initial FEN.
-	switch fields[0] {
-	case "startpos":
-		res = fen.StartingFEN
-	case "fen":
-		res = strings.Join(fields[2:8], " ")
-		fields = fields[8:]
-	default:
-		return "", fmt.Errorf("invalid position command: %s", line)
-	}
-
-	// If there are remaining words, they must be moves to apply to the initial
-	// FEN. Notably, providing "moves" as the final word is interpreted as an
-	// empty move list.
-	var moves []string
-
-	if len(fields) > 0 {
-		if fields[0] != "moves" {
-			return "", fmt.Errorf("invalid position command: %s", line)
-		}
-		if len(fields) > 1 {
-			moves = fields[1:]
-		}
-	}
-
-	// Decode the current FEN.
-	pos, err := fen.Decode(res)
-	if err != nil {
-		return "", fmt.Errorf("invalid position command: %v", err)
-	}
-
-	// Apply moves, if any.
-	for _, m := range moves {
-		move, err := chess.NewMove(m)
-		if err != nil {
-			return "", fmt.Errorf("invalid position command: %v", err)
-		}
-		// TODO: This isn't guaranteed to be legal.
-		_ = pos.Move(move)
-	}
-
-	// Encode the resulting position back to a FEN and return it.
-	res, err = fen.Encode(pos)
-	if err != nil {
-		return "", fmt.Errorf("invalid position command: %v", err)
-	}
-	return res, nil
 }
