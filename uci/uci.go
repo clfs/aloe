@@ -34,11 +34,11 @@ type Position struct {
 // available.
 var DefaultPosition = Position{FEN: fen.StartingFEN}
 
-// Regexes for parsing UCI "position" commands.
+// Regexps for parsing UCI "position" commands.
 var (
-	rxPositionStartposMoves = regexp.MustCompile(`^position startpos moves (.+)$`)
-	rxPositionFENMoves      = regexp.MustCompile(`^position fen (.+) moves (.+)$`)
-	rxPositionFEN           = regexp.MustCompile(`^position fen (.+)$`)
+	rgxPositionStartposMoves = regexp.MustCompile(`^position startpos moves (.+)$`)
+	rgxPositionFENMoves      = regexp.MustCompile(`^position fen (.+) moves (.+)$`)
+	rgxPositionFEN           = regexp.MustCompile(`^position fen (.+)$`)
 )
 
 func (p *Position) UnmarshalText(text []byte) error {
@@ -48,7 +48,7 @@ func (p *Position) UnmarshalText(text []byte) error {
 	}
 
 	// position startpos moves <moves>
-	if m := rxPositionStartposMoves.FindSubmatch(text); m != nil {
+	if m := rgxPositionStartposMoves.FindSubmatch(text); m != nil {
 		*p = Position{
 			FEN:   fen.StartingFEN,
 			Moves: strings.Fields(string(m[1])),
@@ -57,7 +57,7 @@ func (p *Position) UnmarshalText(text []byte) error {
 	}
 
 	// position fen <fen> moves <moves>
-	if m := rxPositionFENMoves.FindSubmatch(text); m != nil {
+	if m := rgxPositionFENMoves.FindSubmatch(text); m != nil {
 		*p = Position{
 			FEN:   string(m[1]),
 			Moves: strings.Fields(string(m[2])),
@@ -66,7 +66,7 @@ func (p *Position) UnmarshalText(text []byte) error {
 	}
 
 	// position fen <fen>
-	if m := rxPositionFEN.FindSubmatch(text); m != nil {
+	if m := rgxPositionFEN.FindSubmatch(text); m != nil {
 		*p = Position{FEN: string(m[1])}
 		return nil
 	}
