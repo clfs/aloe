@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/clfs/aloe/chess"
@@ -34,8 +35,46 @@ type Position struct {
 // available.
 var DefaultPosition = Position{FEN: fen.StartingFEN}
 
+// Regexes for parsing UCI "position" commands.
+var (
+	rxPositionStartpos      = regexp.MustCompile(`^position startpos$`)
+	rxPositionStartposMoves = regexp.MustCompile(`^position startpos moves (.+)$`)
+	rxPositionFENMoves      = regexp.MustCompile(`^position fen (.+) moves (.+)$`)
+	rxPositionFEN           = regexp.MustCompile(`^position fen (.+)$`)
+)
+
 func (p *Position) UnmarshalText(text []byte) error {
-	return nil // TODO: implement
+	// position startpos
+	if rxPositionStartpos.Match(text) {
+		*p = Position{FEN: fen.StartingFEN}
+		return nil
+	}
+
+	// position startpos moves <moves>
+	if matches := rxPositionStartposMoves.FindSubmatch(text); matches != nil {
+		*p = Position{
+			FEN:   fen.StartingFEN,
+			Moves: strings.Split(string(matches[1]), " "),
+		}
+		return nil
+	}
+
+	// position fen <fen> moves <moves>
+	if matches := rxPositionFENMoves.FindSubmatch(text); matches != nil {
+		*p = Position{
+			FEN:   string(matches[1]),
+			Moves: strings.Split(string(matches[2]), " "),
+		}
+		return nil
+	}
+
+	// position fen <fen>
+	if matches := rxPositionFEN.FindSubmatch(text); matches != nil {
+		*p = Position{FEN: string(matches[1])}
+		return nil
+	}
+
+	return fmt.Errorf("invalid position command: %s", text)
 }
 
 // Go represents the "go" UCI command.
