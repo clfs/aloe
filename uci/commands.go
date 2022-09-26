@@ -14,6 +14,21 @@ type BestMove struct {
 	Ponder string
 }
 
+func (b BestMove) MarshalText() ([]byte, error) {
+	var res []byte
+
+	if b.Move == "" {
+		return nil, fmt.Errorf("best move is empty")
+	}
+
+	res = fmt.Appendf(res, "bestmove %s", b.Move)
+	if b.Ponder != "" {
+		res = fmt.Appendf(res, " ponder %s", b.Ponder)
+	}
+
+	return res, nil
+}
+
 // Go represents the "go" command.
 type Go struct {
 	SearchMoves []string // Restrict search to these moves only. Ignore if empty.
