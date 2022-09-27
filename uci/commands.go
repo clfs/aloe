@@ -18,7 +18,7 @@ func (b BestMove) MarshalText() ([]byte, error) {
 	var res []byte
 
 	if b.Move == "" {
-		return nil, fmt.Errorf("best move is empty")
+		return nil, fmt.Errorf("invalid bestmove: move is empty")
 	}
 
 	res = fmt.Appendf(res, "bestmove %s", b.Move)
@@ -62,13 +62,13 @@ func (i ID) MarshalText() ([]byte, error) {
 	var res []byte
 
 	if i.Name == "" {
-		return nil, fmt.Errorf("name is empty")
+		return nil, fmt.Errorf("invalid id: name is empty")
 	}
 
 	res = fmt.Appendf(res, "id name %s\n", i.Name)
 
 	if i.Author == "" {
-		return nil, fmt.Errorf("author is empty")
+		return nil, fmt.Errorf("invalid id: author is empty")
 	}
 
 	res = fmt.Appendf(res, "id author %s", i.Author)
