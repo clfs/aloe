@@ -35,3 +35,34 @@ func TestBestMove_MarshalText(t *testing.T) {
 		}
 	}
 }
+
+func TestID_MarshalText(t *testing.T) {
+	cases := []struct {
+		in      ID
+		want    []byte
+		wantErr bool
+	}{
+		{
+			in:   ID{Name: "Skynet", Author: "Cyberdyne"},
+			want: []byte("id name Skynet\nid author Cyberdyne"),
+		},
+		{
+			in:      ID{Name: "Skynet"},
+			wantErr: true,
+		},
+		{
+			in:      ID{Author: "Cyberdyne"},
+			wantErr: true,
+		},
+	}
+
+	for _, c := range cases {
+		got, err := c.in.MarshalText()
+		if c.wantErr != (err != nil) {
+			t.Errorf("%+v: wantErr = %t, err = %v", c.in, c.wantErr, err)
+		}
+		if !bytes.Equal(c.want, got) {
+			t.Errorf("%+v: want = %q, got = %q", c.in, c.want, got)
+		}
+	}
+}

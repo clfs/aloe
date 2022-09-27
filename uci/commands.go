@@ -58,8 +58,22 @@ type ID struct {
 	Author string
 }
 
-func (i *ID) MarshalText() ([]byte, error) {
-	return nil, nil
+func (i ID) MarshalText() ([]byte, error) {
+	var res []byte
+
+	if i.Name == "" {
+		return nil, fmt.Errorf("name is empty")
+	}
+
+	res = fmt.Appendf(res, "id name %s\n", i.Name)
+
+	if i.Author == "" {
+		return nil, fmt.Errorf("author is empty")
+	}
+
+	res = fmt.Appendf(res, "id author %s", i.Author)
+
+	return res, nil
 }
 
 // Score types used in [Info].
