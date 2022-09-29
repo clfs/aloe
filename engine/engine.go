@@ -2,6 +2,8 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/clfs/aloe/uci"
 )
 
@@ -11,16 +13,14 @@ func New() *Engine {
 	return &Engine{}
 }
 
-// ID returns the engine's UCI identity.
-func (e *Engine) ID() uci.ResponseID {
-	return uci.ResponseID{
-		Name:   "Aloe",
-		Author: "Calvin Figuereo-Supraner",
-	}
+func (e *Engine) Do(req uci.Request) error {
+	return nil // TODO: implement
 }
 
-// Search runs a search with the provided parameters. The results are encoded in
-// a UCI-compatible format. The search is terminated when the channel is closed.
-func (e *Engine) Search(p uci.RequestPosition, g uci.RequestGo, ch <-chan uci.ResponseInfo) error {
+func (e *Engine) Respond() (uci.Response, error) {
+	return nil, fmt.Errorf("not implemented") // TODO: implement
+}
+
+func (e *Engine) Close() error {
 	return nil // TODO: implement
 }

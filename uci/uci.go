@@ -1,39 +1,19 @@
-// Package uci implements the Universal Chess Interface (UCI) protocol.
+// Package uci describes the Universal Chess Interface (UCI) protocol.
 package uci
 
-import (
-	"bufio"
-	"io"
-)
+import "errors"
 
 type Engine interface {
+	// Do blocks until the request is completed or an error occurs.
+	Do(req Request) error
+
+	// Respond returns and consumes the oldest response from the engine.
+	// It blocks until a response is available or an error occurs.
+	Respond() (Response, error)
+
+	// Close closes the engine. Any blocked Do or Respond calls will be
+	// unblocked and return ErrEngineClosed.
+	Close() error
 }
 
-// Client is a wrapper around a UCI-compatible engine.
-type Client struct {
-	e Engine
-	w io.Writer
-}
-
-// NewClient returns a new [Client] that writes UCI output to w.
-func NewClient(e Engine, w io.Writer) *Client {
-	return &Client{e: e, w: w}
-}
-
-// Run parses UCI input from r and sends commands to the engine.
-func (c *Client) Run(r io.Reader) error {
-	s := bufio.NewScanner(r)
-
-	for s.Scan() {
-		line := s.Text()
-
-		req, err := Parse(line)
-		if err != nil {
-			return err
-		}
-
-		_ = req // discard for now, TODO
-	}
-
-	return s.Err()
-}
+var ErrEngineClosed = errors.New("engine closed")
