@@ -98,6 +98,22 @@ func (s Square) IsAdjacentTo(other Square) bool {
 	return false
 }
 
+// parseSquare returns the square corresponding to a lowercase string, like "a1".
+func parseSquare(s string) (Square, error) {
+	if len(s) != 2 {
+		return 0, fmt.Errorf("invalid square: %s", s)
+	}
+
+	f := File(s[0] - 'a')
+	r := Rank(s[1] - '1')
+
+	if f > FileH || r > Rank8 {
+		return 0, fmt.Errorf("invalid square: %s", s)
+	}
+
+	return SquareAt(f, r), nil
+}
+
 func (s Square) String() string {
 	if !s.IsValid() {
 		return fmt.Sprintf("Square(%d)", s)
