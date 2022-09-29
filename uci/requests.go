@@ -1,6 +1,7 @@
 package uci
 
 import (
+	"bytes"
 	"encoding"
 	"fmt"
 	"regexp"
@@ -14,8 +15,18 @@ type Request interface {
 	encoding.TextUnmarshaler
 }
 
-// Go represents the "go" command.
-type Go struct {
+// RequestIsReady represents the "isready" command.
+type RequestIsReady struct{}
+
+func (req *RequestIsReady) UnmarshalText(text []byte) error {
+	if !bytes.Equal(text, []byte("isready")) {
+		return fmt.Errorf("invalid isready request")
+	}
+	return nil
+}
+
+// RequestGo represents the "go" command.
+type RequestGo struct {
 	SearchMoves []string // Restrict search to these moves only. Ignore if empty.
 
 	Ponder   bool // Search in pondering mode.
@@ -33,19 +44,15 @@ type Go struct {
 	MovesToGo int // If > 0, there are this many moves until the next time control.
 }
 
-func (g *Go) UnmarshalText(text []byte) error {
+func (req *RequestGo) UnmarshalText(text []byte) error {
 	return nil // TODO: implement
 }
 
-// Position represents the "position" command.
-type Position struct {
+// RequestPosition represents the "position" command.
+type RequestPosition struct {
 	FEN   string
 	Moves []string
 }
-
-// DefaultPosition is the default [Position] used when no "position" command is
-// available.
-var DefaultPosition = Position{FEN: fen.StartingFEN}
 
 // Regular expressions for parsing "position" commands.
 var (
@@ -54,31 +61,41 @@ var (
 	rgxPositionFEN           = regexp.MustCompile(`^position fen (.+)$`)
 )
 
-func (p *Position) UnmarshalText(text []byte) error {
+func (req *RequestPosition) UnmarshalText(text []byte) error {
 	s := string(text)
 
 	if s == "position startpos" {
-		*p = Position{fen.StartingFEN, nil}
+		*req = RequestPosition{fen.StartingFEN, nil}
 		return nil
 	}
 
 	// position startpos moves <moves>
 	if m := rgxPositionStartposMoves.FindStringSubmatch(s); m != nil {
-		*p = Position{fen.StartingFEN, strings.Fields(m[1])}
+		*req = RequestPosition{fen.StartingFEN, strings.Fields(m[1])}
 		return nil
 	}
 
 	// position fen <fen> moves <moves>
 	if m := rgxPositionFENMoves.FindStringSubmatch(s); m != nil {
-		*p = Position{m[1], strings.Fields(m[2])}
+		*req = RequestPosition{m[1], strings.Fields(m[2])}
 		return nil
 	}
 
 	// position fen <fen>
 	if m := rgxPositionFEN.FindStringSubmatch(s); m != nil {
-		*p = Position{m[1], nil}
+		*req = RequestPosition{m[1], nil}
 		return nil
 	}
 
 	return fmt.Errorf("invalid position command: %s", text)
+}
+
+// RequestUCI represents the "uci" command.
+type RequestUCI struct{}
+
+func (req *RequestUCI) UnmarshalText(text []byte) error {
+	if !bytes.Equal(text, []byte("uci")) {
+		return fmt.Errorf("invalid uci request")
+	}
+	return nil
 }

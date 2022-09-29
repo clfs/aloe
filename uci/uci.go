@@ -12,15 +12,15 @@ import (
 // with this package. Aloe's engine implements this interface.
 type Engine interface {
 	ID() ID
-	Search(p Position, g Go, ch <-chan Info) error
+	Search(p RequestPosition, g RequestGo, ch <-chan Info) error
 }
 
 // Client is a wrapper around a UCI-compatible engine.
 type Client struct {
 	e  Engine
-	w  io.Writer // For UCI output.
-	ch chan Info // Channel for search info.
-	p  Position  // Position command to use for search.
+	w  io.Writer       // For UCI output.
+	ch chan Info       // Channel for search info.
+	p  RequestPosition // Position command to use for search.
 }
 
 // NewClient returns a new [Client] that writes UCI responses to w.
@@ -29,7 +29,6 @@ func NewClient(e Engine, w io.Writer) *Client {
 		e:  e,
 		w:  w,
 		ch: make(chan Info),
-		p:  DefaultPosition,
 	}
 }
 
@@ -90,7 +89,6 @@ func (c *Client) handleIsReady() {
 // handleUCINewGame handles the "ucinewgame" UCI command.
 func (c *Client) handleUCINewGame() {
 	close(c.ch)
-	c.p = DefaultPosition
 }
 
 // handlePosition handles the "position" UCI command.
@@ -103,7 +101,7 @@ func (c *Client) handleGo(line string) error {
 	close(c.ch) // Cancel the existing search, if any.
 	c.ch = make(chan Info)
 
-	var g Go
+	var g RequestGo
 	if err := g.UnmarshalText([]byte(line)); err != nil {
 		return err
 	}

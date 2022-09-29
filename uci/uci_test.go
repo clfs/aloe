@@ -9,31 +9,31 @@ import (
 
 var testsValidPositionCommands = []struct {
 	in   string
-	want Position
+	want RequestPosition
 }{
 	{
 		"position startpos",
-		Position{FEN: fen.StartingFEN},
+		RequestPosition{FEN: fen.StartingFEN},
 	},
 	{
 		"position startpos moves e2e4",
-		Position{fen.StartingFEN, []string{"e2e4"}},
+		RequestPosition{fen.StartingFEN, []string{"e2e4"}},
 	},
 	{
 		"position startpos moves e2e4 e7e5",
-		Position{fen.StartingFEN, []string{"e2e4", "e7e5"}},
+		RequestPosition{fen.StartingFEN, []string{"e2e4", "e7e5"}},
 	},
 	{
 		"position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-		Position{FEN: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"},
+		RequestPosition{FEN: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"},
 	},
 	{
 		"position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4",
-		Position{"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", []string{"e2e4"}},
+		RequestPosition{"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", []string{"e2e4"}},
 	},
 	{
 		"position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5",
-		Position{"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", []string{"e2e4", "e7e5"}},
+		RequestPosition{"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", []string{"e2e4", "e7e5"}},
 	},
 }
 
@@ -46,7 +46,7 @@ var testsInvalidPositionCommands = []string{
 
 func TestPosition_UnmarshalText(t *testing.T) {
 	for _, tc := range testsValidPositionCommands {
-		var got Position
+		var got RequestPosition
 		if err := got.UnmarshalText([]byte(tc.in)); err != nil {
 			t.Errorf("%q: error: %v", tc.in, err)
 		}
@@ -56,7 +56,7 @@ func TestPosition_UnmarshalText(t *testing.T) {
 	}
 
 	for _, tc := range testsInvalidPositionCommands {
-		var got Position
+		var got RequestPosition
 		if err := got.UnmarshalText([]byte(tc)); err == nil {
 			t.Errorf("%q: expected error, got nil", tc)
 		}
@@ -65,11 +65,11 @@ func TestPosition_UnmarshalText(t *testing.T) {
 
 var testsValidGoCommands = []struct {
 	in   string
-	want Go
+	want RequestGo
 }{
 	{
 		"go",
-		Go{Infinite: true},
+		RequestGo{Infinite: true},
 	},
 }
 
@@ -79,7 +79,7 @@ var testsInvalidGoCommands = []string{
 
 func TestGo_UnmarshalText(t *testing.T) {
 	for _, tc := range testsValidGoCommands {
-		var got Go
+		var got RequestGo
 		if err := got.UnmarshalText([]byte(tc.in)); err != nil {
 			t.Errorf("%q: error: %v", tc.in, err)
 		}
@@ -89,7 +89,7 @@ func TestGo_UnmarshalText(t *testing.T) {
 	}
 
 	for _, tc := range testsInvalidGoCommands {
-		var got Go
+		var got RequestGo
 		if err := got.UnmarshalText([]byte(tc)); err == nil {
 			t.Errorf("%q: expected error, got nil", tc)
 		}
