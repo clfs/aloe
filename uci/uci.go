@@ -159,3 +159,7 @@ func (c *Client) handleUnknown(line string) error {
 		return fmt.Errorf("unknown command: %s", fields[0])
 	}
 }
+
+func Parse(line string) (Request, error) {
+	return nil, nil // TODO: implement
+}

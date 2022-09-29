@@ -1,12 +1,23 @@
 package uci
 
 import (
+	"encoding"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/clfs/aloe/fen"
 )
+
+// A Request is a command sent from the client to the engine.
+type Request interface {
+	encoding.TextUnmarshaler
+}
+
+// A Response is a command sent from the engine to the client.
+type Response interface {
+	encoding.TextMarshaler
+}
 
 // BestMove represents the "bestmove" UCI command.
 type BestMove struct {
