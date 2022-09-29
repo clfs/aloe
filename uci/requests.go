@@ -15,6 +15,10 @@ type Request interface {
 	encoding.TextUnmarshaler
 }
 
+func Parse(line string) (Request, error) {
+	return nil, nil // TODO: implement
+}
+
 // RequestIsReady represents the "isready" command.
 type RequestIsReady struct{}
 
