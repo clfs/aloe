@@ -11,16 +11,16 @@ import (
 // Engine is the interface that a chess engine must implement for compatibility
 // with this package. Aloe's engine implements this interface.
 type Engine interface {
-	ID() ID
-	Search(p RequestPosition, g RequestGo, ch <-chan Info) error
+	ID() ResponseID
+	Search(p RequestPosition, g RequestGo, ch <-chan ResponseInfo) error
 }
 
 // Client is a wrapper around a UCI-compatible engine.
 type Client struct {
 	e  Engine
-	w  io.Writer       // For UCI output.
-	ch chan Info       // Channel for search info.
-	p  RequestPosition // Position command to use for search.
+	w  io.Writer         // For UCI output.
+	ch chan ResponseInfo // Channel for search info.
+	p  RequestPosition   // Position command to use for search.
 }
 
 // NewClient returns a new [Client] that writes UCI responses to w.
@@ -28,7 +28,7 @@ func NewClient(e Engine, w io.Writer) *Client {
 	return &Client{
 		e:  e,
 		w:  w,
-		ch: make(chan Info),
+		ch: make(chan ResponseInfo),
 	}
 }
 
@@ -99,7 +99,7 @@ func (c *Client) handlePosition(line string) error {
 // handleGo handles the "go" UCI command.
 func (c *Client) handleGo(line string) error {
 	close(c.ch) // Cancel the existing search, if any.
-	c.ch = make(chan Info)
+	c.ch = make(chan ResponseInfo)
 
 	var g RequestGo
 	if err := g.UnmarshalText([]byte(line)); err != nil {

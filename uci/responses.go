@@ -10,59 +10,59 @@ type Response interface {
 	encoding.TextMarshaler
 }
 
-// BestMove represents the "bestmove" UCI command.
-type BestMove struct {
+// ResponseBestMove represents the "bestmove" command.
+type ResponseBestMove struct {
 	Move   string
 	Ponder string
 }
 
-func (b BestMove) MarshalText() ([]byte, error) {
-	var res []byte
+func (resp ResponseBestMove) MarshalText() ([]byte, error) {
+	var text []byte
 
-	if b.Move == "" {
+	if resp.Move == "" {
 		return nil, fmt.Errorf("invalid bestmove: move is empty")
 	}
 
-	res = fmt.Appendf(res, "bestmove %s", b.Move)
-	if b.Ponder != "" {
-		res = fmt.Appendf(res, " ponder %s", b.Ponder)
+	text = fmt.Appendf(text, "bestmove %s", resp.Move)
+	if resp.Ponder != "" {
+		text = fmt.Appendf(text, " ponder %s", resp.Ponder)
 	}
 
-	return res, nil
+	return text, nil
 }
 
-// ID represents the "id" command.
-type ID struct {
+// ResponseID represents the "id" command.
+type ResponseID struct {
 	Name   string
 	Author string
 }
 
-func (i ID) MarshalText() ([]byte, error) {
-	var res []byte
+func (resp ResponseID) MarshalText() ([]byte, error) {
+	var text []byte
 
-	if i.Name == "" {
+	if resp.Name == "" {
 		return nil, fmt.Errorf("invalid id: name is empty")
 	}
 
-	res = fmt.Appendf(res, "id name %s\n", i.Name)
+	text = fmt.Appendf(text, "id name %s\n", resp.Name)
 
-	if i.Author == "" {
+	if resp.Author == "" {
 		return nil, fmt.Errorf("invalid id: author is empty")
 	}
 
-	res = fmt.Appendf(res, "id author %s", i.Author)
+	text = fmt.Appendf(text, "id author %s", resp.Author)
 
-	return res, nil
+	return text, nil
 }
 
-// Score types used in [Info].
+// Score types used in [ResponseInfo].
 const (
 	ScoreTypeCentipawn = "cp"
 	ScoreTypeMate      = "mate"
 )
 
-// Info represents the "info" UCI command.
-type Info struct {
+// ResponseInfo represents the "info" UCI command.
+type ResponseInfo struct {
 	Depth     int      // Search depth in plies.
 	PV        []string // Moves in the principal variation.
 	Score     int      // Score from the engine's point of view.
