@@ -3,88 +3,112 @@
 package uci
 
 import (
-	"bufio"
-	"encoding"
-	"errors"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 )
 
-// Message is a UCI message.
-type Message interface {
-	encoding.TextMarshaler
-	encoding.TextUnmarshaler
+// Message holds a value of one of these types:
+//   - [BestMove]
+//   - [CopyProtection]
+//   - [Debug]
+//   - [Go]
+//   - [ID]
+//   - [Info]
+//   - [IsReady]
+//   - [Option]
+//   - [PonderHit]
+//   - [Position]
+//   - [Quit]
+//   - [ReadyOk]
+//   - [Register]
+//   - [Registration]
+//   - [SetOption]
+//   - [Stop]
+//   - [UCI]
+//   - [UCINewGame]
+//   - [Unknown]
+type Message any
+
+// Marshaler is the interface implemented by types that can marshal themselves
+// into a valid UCI message.
+type Marshaler interface {
+	MarshalUCI() ([]byte, error)
 }
 
-// ErrBlankMessage is returned by [Parse] when the input is empty or whitespace.
-var ErrBlankMessage = errors.New("blank message")
-
-// ParseError contains information about a parsing error.
-type ParseError struct {
-	Type reflect.Type // type that could not be assigned to
+// A MarshalerError represents an error from calling a MarshalUCI method.
+type MarshalerError struct {
+	Type reflect.Type
+	Err  error
 }
 
-// Parse parses text into a UCI message. If s is empty or whitespace, Parse
-// returns [ErrBlankMessage].
-func Parse(s string) (Message, error) {
-	var m Message
+func (e *MarshalerError) Error() string {
+	return fmt.Sprintf("error marshaling for type %s: %s", e.Type, e.Err)
+}
 
-	scanner := bufio.NewScanner(strings.NewReader(s))
-	scanner.Split(bufio.ScanWords)
+// Unmarshaler is the interface implemented by types that can unmarshal a UCI
+// description of themselves. The input can be assumed to be a valid encoding of
+// a UCI value. UnmarshalUCI must copy the UCI data if it wishes to retain the
+// data after returning.
+type Unmarshaler interface {
+	UnmarshalUCI([]byte) error
+}
 
-	if !scanner.Scan() {
-		return nil, ErrBlankMessage
+// An UnmarshalerError represents an error from calling an UnmarshalUCI method.
+type UnmarshalerError struct {
+	Type reflect.Type
+	Err  error
+}
+
+func (e *UnmarshalerError) Error() string {
+	return fmt.Sprintf("error unmarshaling for type %s: %s", e.Type, e.Err)
+}
+
+// Decoder decodes UCI messages from an input stream.
+type Decoder struct {
+	r io.Reader
+}
+
+// NewDecoder returns a new decoder that reads from r.
+//
+// The decoder introduces its own buffering and may read data from r beyond the
+// values requested.
+func NewDecoder(r io.Reader) *Decoder {
+	return &Decoder{r: r}
+}
+
+// Decode reads the next UCI-encoded value from its input and stores it in the
+// value pointed to by m.
+func (dec *Decoder) Decode(v Unmarshaler) error {
+	return nil
+}
+
+// Message returns the next UCI message in the input stream. At the end of the
+// input stream, Message returns nil, io.EOF.
+func (dec *Decoder) Message() (Message, error) {
+	return nil, io.EOF
+}
+
+// Encoder encodes UCI messages to an output stream.
+type Encoder struct {
+	w io.Writer
+}
+
+// NewEncoder returns a new encoder that writes to w.
+func NewEncoder(w io.Writer) *Encoder {
+	return &Encoder{w: w}
+}
+
+// Encode writes the UCI encoding of m to the stream, followed by a newline
+// character.
+func (enc *Encoder) Encode(v Marshaler) error {
+	text, err := v.MarshalUCI()
+	if err != nil {
+		return err
 	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	switch scanner.Text() {
-	case "bestmove":
-		m = &BestMove{}
-	case "copyprotection":
-		m = &CopyProtection{}
-	case "debug":
-		m = &Debug{}
-	case "go":
-		m = &Go{}
-	case "id":
-		m = &ID{}
-	case "info":
-		m = &Info{}
-	case "isready":
-		m = &IsReady{}
-	case "option":
-		m = &Option{}
-	case "ponderhit":
-		m = &PonderHit{}
-	case "position":
-		m = &Position{}
-	case "quit":
-		m = &Quit{}
-	case "readyok":
-		m = &ReadyOk{}
-	case "register":
-		m = &Register{}
-	case "registration":
-		m = &Registration{}
-	case "setoption":
-		m = &SetOption{}
-	case "stop":
-		m = &Stop{}
-	case "uci":
-		m = &UCI{}
-	case "ucinewgame":
-		m = &UCINewGame{}
-	default:
-		m = &Unknown{}
-	}
-
-	err := m.UnmarshalText([]byte(s))
-
-	return m, err
+	_, err = fmt.Fprintf(enc.w, "%s\n", text)
+	return err
 }
 
 // BestMove represents the "bestmove" message.
