@@ -2,23 +2,146 @@
 // (UCI) messages.
 package uci
 
-import "fmt"
+import (
+	"bufio"
+	"encoding"
+	"errors"
+	"fmt"
+	"reflect"
+	"strings"
+)
 
-// BestMove represents the "bestmove" command.
+// Message is a UCI message.
+type Message interface {
+	encoding.TextMarshaler
+	encoding.TextUnmarshaler
+}
+
+// ErrBlankMessage is returned by [Parse] when the input is empty or whitespace.
+var ErrBlankMessage = errors.New("blank message")
+
+// ParseError contains information about a parsing error.
+type ParseError struct {
+	Type reflect.Type // type that could not be assigned to
+}
+
+// Parse parses text into a UCI message. If s is empty or whitespace, Parse
+// returns [ErrBlankMessage].
+func Parse(s string) (Message, error) {
+	var m Message
+
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	scanner.Split(bufio.ScanWords)
+
+	if !scanner.Scan() {
+		return nil, ErrBlankMessage
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	switch scanner.Text() {
+	case "bestmove":
+		m = &BestMove{}
+	case "copyprotection":
+		m = &CopyProtection{}
+	case "debug":
+		m = &Debug{}
+	case "go":
+		m = &Go{}
+	case "id":
+		m = &ID{}
+	case "info":
+		m = &Info{}
+	case "isready":
+		m = &IsReady{}
+	case "option":
+		m = &Option{}
+	case "ponderhit":
+		m = &PonderHit{}
+	case "position":
+		m = &Position{}
+	case "quit":
+		m = &Quit{}
+	case "readyok":
+		m = &ReadyOk{}
+	case "register":
+		m = &Register{}
+	case "registration":
+		m = &Registration{}
+	case "setoption":
+		m = &SetOption{}
+	case "stop":
+		m = &Stop{}
+	case "uci":
+		m = &UCI{}
+	case "ucinewgame":
+		m = &UCINewGame{}
+	default:
+		m = &Unknown{}
+	}
+
+	err := m.UnmarshalText([]byte(s))
+
+	return m, err
+}
+
+// BestMove represents the "bestmove" message.
 type BestMove struct {
 	Move   string
 	Ponder string
 }
 
 func (b *BestMove) MarshalText() ([]byte, error) {
-	return nil, fmt.Errorf("not implemented")
+	var text []byte
+
+	if b.Move == "" {
+		return nil, fmt.Errorf("invalid bestmove")
+	}
+
+	text = fmt.Appendf(text, "bestmove %s", b.Move)
+
+	if b.Ponder != "" {
+		text = fmt.Appendf(text, " ponder %s", b.Ponder)
+	}
+
+	return text, nil
 }
 
-func (b *BestMove) UnmarshalText() error {
-	return fmt.Errorf("not implemented")
+func (b *BestMove) UnmarshalText(text []byte) error {
+	fields := strings.Fields(string(text))
+
+	if len(fields) == 0 {
+		return fmt.Errorf("invalid bestmove")
+	}
+
+	if fields[0] != "bestmove" {
+		return fmt.Errorf("invalid bestmove")
+	}
+
+	if len(fields) < 2 {
+		return fmt.Errorf("invalid bestmove")
+	}
+
+	b.Move = fields[1]
+
+	if len(fields) > 2 {
+		if fields[2] != "ponder" {
+			return fmt.Errorf("invalid bestmove")
+		}
+
+		if len(fields) < 4 {
+			return fmt.Errorf("invalid bestmove")
+		}
+
+		b.Ponder = fields[3]
+	}
+
+	return nil
 }
 
-// CopyProtection represents the "copyprotection" command.
+// CopyProtection represents the "copyprotection" message.
 type CopyProtection struct{}
 
 func (c *CopyProtection) MarshalText() ([]byte, error) {
@@ -29,7 +152,7 @@ func (c *CopyProtection) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// Debug represents the "debug" command.
+// Debug represents the "debug" message.
 type Debug struct {
 	Flag bool
 }
@@ -42,7 +165,7 @@ func (d *Debug) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// Go represents the "go" command.
+// Go represents the "go" message.
 type Go struct {
 	SearchMoves []string // Restrict search to these moves only. Ignore if empty.
 
@@ -65,7 +188,11 @@ func (g *Go) MarshalText() ([]byte, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-// ID represents the "id" command.
+func (g *Go) UnmarshalText(text []byte) error {
+	return fmt.Errorf("not implemented")
+}
+
+// ID represents the "id" message.
 type ID struct {
 	Name   string
 	Author string
@@ -79,7 +206,7 @@ func (i *ID) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// Info represents the "info" UCI command.
+// Info represents the "info" message.
 type Info struct{}
 
 func (i *Info) MarshalText() ([]byte, error) {
@@ -90,7 +217,7 @@ func (i *Info) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// IsReady represents the "isready" command.
+// IsReady represents the "isready" message.
 type IsReady struct{}
 
 func (*IsReady) MarshalText() ([]byte, error) {
@@ -99,12 +226,12 @@ func (*IsReady) MarshalText() ([]byte, error) {
 
 func (*IsReady) UnmarshalText(text []byte) error {
 	if string(text) != "isready" {
-		return fmt.Errorf("invalid isready command")
+		return fmt.Errorf("invalid isready message")
 	}
 	return nil
 }
 
-// Option represents the "option" command.
+// Option represents the "option" message.
 type Option struct{}
 
 func (o *Option) MarshalText() ([]byte, error) {
@@ -115,7 +242,7 @@ func (o *Option) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// PonderHit represents the "ponderhit" command.
+// PonderHit represents the "ponderhit" message.
 type PonderHit struct{}
 
 func (*PonderHit) MarshalText() ([]byte, error) {
@@ -124,12 +251,12 @@ func (*PonderHit) MarshalText() ([]byte, error) {
 
 func (*PonderHit) UnmarshalText(text []byte) error {
 	if string(text) != "ponderhit" {
-		return fmt.Errorf("invalid ponderhit command")
+		return fmt.Errorf("invalid ponderhit message")
 	}
 	return nil
 }
 
-// Position represents the "position" command.
+// Position represents the "position" message.
 type Position struct {
 	FEN   string
 	Moves []string
@@ -140,10 +267,10 @@ func (p *Position) MarshalText() ([]byte, error) {
 }
 
 func (p *Position) UnmarshalText(text []byte) error {
-	return fmt.Errorf("not implemented")
+	return fmt.Errorf("not message")
 }
 
-// Quit represents the "quit" command.
+// Quit represents the "quit" message.
 type Quit struct{}
 
 func (*Quit) MarshalText() ([]byte, error) {
@@ -157,7 +284,7 @@ func (*Quit) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// ReadyOk represents the "readyok" command.
+// ReadyOk represents the "readyok" message.
 type ReadyOk struct{}
 
 func (*ReadyOk) MarshalText() ([]byte, error) {
@@ -166,12 +293,12 @@ func (*ReadyOk) MarshalText() ([]byte, error) {
 
 func (*ReadyOk) UnmarshalText(text []byte) error {
 	if string(text) != "readyok" {
-		return fmt.Errorf("invalid readyok command")
+		return fmt.Errorf("invalid readyok message")
 	}
 	return nil
 }
 
-// Register represents the "register" command.
+// Register represents the "register" message.
 type Register struct {
 	Later bool
 	Name  string
@@ -186,7 +313,7 @@ func (r *Register) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// Registration represents the "registration" command.
+// Registration represents the "registration" message.
 type Registration struct{}
 
 func (r *Registration) MarshalText() ([]byte, error) {
@@ -197,7 +324,7 @@ func (r *Registration) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// SetOption represents the "setoption" command.
+// SetOption represents the "setoption" message.
 type SetOption struct {
 	Name  string
 	Value string
@@ -211,7 +338,7 @@ func (s *SetOption) UnmarshalText(text []byte) error {
 	return fmt.Errorf("not implemented")
 }
 
-// Stop represents the "stop" command.
+// Stop represents the "stop" message.
 type Stop struct{}
 
 func (*Stop) MarshalText() ([]byte, error) {
@@ -220,12 +347,12 @@ func (*Stop) MarshalText() ([]byte, error) {
 
 func (*Stop) UnmarshalText(text []byte) error {
 	if string(text) != "stop" {
-		return fmt.Errorf("invalid stop command")
+		return fmt.Errorf("invalid stop message")
 	}
 	return nil
 }
 
-// UCI represents the "uci" command.
+// UCI represents the "uci" message.
 type UCI struct{}
 
 func (*UCI) MarshalText() ([]byte, error) {
@@ -234,12 +361,12 @@ func (*UCI) MarshalText() ([]byte, error) {
 
 func (*UCI) UnmarshalText(text []byte) error {
 	if string(text) != "uci" {
-		return fmt.Errorf("invalid uci command")
+		return fmt.Errorf("invalid uci message")
 	}
 	return nil
 }
 
-// UCINewGame represents the "ucinewgame" command.
+// UCINewGame represents the "ucinewgame" message.
 type UCINewGame struct{}
 
 func (*UCINewGame) MarshalText() ([]byte, error) {
@@ -248,12 +375,12 @@ func (*UCINewGame) MarshalText() ([]byte, error) {
 
 func (*UCINewGame) UnmarshalText(text []byte) error {
 	if string(text) != "ucinewgame" {
-		return fmt.Errorf("invalid ucinewgame command")
+		return fmt.Errorf("invalid ucinewgame message")
 	}
 	return nil
 }
 
-// UCIOk represents the "uciok" command.
+// UCIOk represents the "uciok" message.
 type UCIOk struct{}
 
 func (*UCIOk) MarshalText() ([]byte, error) {
@@ -262,7 +389,22 @@ func (*UCIOk) MarshalText() ([]byte, error) {
 
 func (*UCIOk) UnmarshalText(text []byte) error {
 	if string(text) != "uciok" {
-		return fmt.Errorf("invalid uciok command")
+		return fmt.Errorf("invalid uciok message")
 	}
+	return nil
+}
+
+// Unknown represents a message of unknown type.
+type Unknown struct {
+	Text []byte
+}
+
+func (u *Unknown) MarshalText() ([]byte, error) {
+	return u.Text, nil
+}
+
+func (u *Unknown) UnmarshalText(text []byte) error {
+	u.Text = nil
+	copy(u.Text, text)
 	return nil
 }
