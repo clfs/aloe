@@ -30,8 +30,8 @@ func TestDecode(t *testing.T) {
 	if err != nil {
 		t.Errorf("error: %v", err)
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("(-want, +got):\n%s", diff)
+	if want != got {
+		t.Errorf("want %v, got %v", want, got)
 	}
 }
 
