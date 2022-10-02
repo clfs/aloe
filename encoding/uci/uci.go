@@ -3,91 +3,18 @@
 package uci
 
 import (
+	"bufio"
+	"bytes"
+	"encoding"
 	"fmt"
 	"io"
-	"reflect"
 	"strings"
 )
 
-// Message holds a value of one of these types:
-//   - [BestMove]
-//   - [CopyProtection]
-//   - [Debug]
-//   - [Go]
-//   - [ID]
-//   - [Info]
-//   - [IsReady]
-//   - [Option]
-//   - [PonderHit]
-//   - [Position]
-//   - [Quit]
-//   - [ReadyOk]
-//   - [Register]
-//   - [Registration]
-//   - [SetOption]
-//   - [Stop]
-//   - [UCI]
-//   - [UCINewGame]
-//   - [Unknown]
-type Message any
-
-// Marshaler is the interface implemented by types that can marshal themselves
-// into a valid UCI message.
-type Marshaler interface {
-	MarshalUCI() ([]byte, error)
-}
-
-// A MarshalerError represents an error from calling a MarshalUCI method.
-type MarshalerError struct {
-	Type reflect.Type
-	Err  error
-}
-
-func (e *MarshalerError) Error() string {
-	return fmt.Sprintf("error marshaling for type %s: %s", e.Type, e.Err)
-}
-
-// Unmarshaler is the interface implemented by types that can unmarshal a UCI
-// description of themselves. The input can be assumed to be a valid encoding of
-// a UCI value. UnmarshalUCI must copy the UCI data if it wishes to retain the
-// data after returning.
-type Unmarshaler interface {
-	UnmarshalUCI([]byte) error
-}
-
-// An UnmarshalerError represents an error from calling an UnmarshalUCI method.
-type UnmarshalerError struct {
-	Type reflect.Type
-	Err  error
-}
-
-func (e *UnmarshalerError) Error() string {
-	return fmt.Sprintf("error unmarshaling for type %s: %s", e.Type, e.Err)
-}
-
-// Decoder decodes UCI messages from an input stream.
-type Decoder struct {
-	r io.Reader
-}
-
-// NewDecoder returns a new decoder that reads from r.
-//
-// The decoder introduces its own buffering and may read data from r beyond the
-// values requested.
-func NewDecoder(r io.Reader) *Decoder {
-	return &Decoder{r: r}
-}
-
-// Decode reads the next UCI-encoded value from its input and stores it in the
-// value pointed to by m.
-func (dec *Decoder) Decode(v Unmarshaler) error {
-	return nil
-}
-
-// Message returns the next UCI message in the input stream. At the end of the
-// input stream, Message returns nil, io.EOF.
-func (dec *Decoder) Message() (Message, error) {
-	return nil, io.EOF
+// Message is the interface implemented by all UCI messages.
+type Message interface {
+	encoding.TextMarshaler
+	encoding.TextUnmarshaler
 }
 
 // Encoder encodes UCI messages to an output stream.
@@ -100,15 +27,51 @@ func NewEncoder(w io.Writer) *Encoder {
 	return &Encoder{w: w}
 }
 
-// Encode writes the UCI encoding of m to the stream, followed by a newline
-// character.
-func (enc *Encoder) Encode(v Marshaler) error {
-	text, err := v.MarshalUCI()
+// Encode writes m to the stream, followed by a newline character.
+func (e *Encoder) Encode(m encoding.TextMarshaler) error {
+	text, err := m.MarshalText()
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(enc.w, "%s\n", text)
+	_, err = fmt.Fprintf(e.w, "%s\n", text)
 	return err
+}
+
+// Decoder decodes UCI messages from an input stream.
+type Decoder struct {
+	r *bufio.Reader
+}
+
+// NewDecoder returns a new decoder that reads from r.
+func NewDecoder(r io.Reader) *Decoder {
+	return &Decoder{r: bufio.NewReader(r)}
+}
+
+// Decode reads the next message from its input and stores it in the value
+// pointed to by m.
+func (d *Decoder) Decode(m Message) error {
+	text, err := d.r.ReadBytes('\n')
+	if err != nil {
+		return err
+	}
+	return m.UnmarshalText(text[:len(text)-1])
+}
+
+// Message returns the next UCI message in the input stream. At the end of the
+// input stream, Message returns nil, io.EOF.
+func (d *Decoder) Message() (Message, error) {
+	text, err := d.r.ReadBytes('\n')
+	if err != nil {
+		return nil, err
+	}
+
+	fields := bytes.Fields(text)
+
+	if len(fields) == 0 {
+		return nil, fmt.Errorf("blank message")
+	}
+
+	return nil, io.EOF
 }
 
 // BestMove represents the "bestmove" message.
@@ -420,15 +383,14 @@ func (*UCIOk) UnmarshalText(text []byte) error {
 
 // Unknown represents a message of unknown type.
 type Unknown struct {
-	Text []byte
+	Text string
 }
 
 func (u *Unknown) MarshalText() ([]byte, error) {
-	return u.Text, nil
+	return []byte(u.Text), nil
 }
 
 func (u *Unknown) UnmarshalText(text []byte) error {
-	u.Text = nil
-	copy(u.Text, text)
+	u.Text = string(text)
 	return nil
 }
