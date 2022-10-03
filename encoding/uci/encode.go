@@ -1,10 +1,14 @@
 package uci
 
 import (
-	"encoding"
 	"fmt"
 	"io"
 )
+
+// Marshal returns the UCI encoding of m.
+func Marshal(m Message) ([]byte, error) {
+	return m.MarshalText()
+}
 
 // Encoder encodes UCI messages to an output stream.
 type Encoder struct {
@@ -17,7 +21,7 @@ func NewEncoder(w io.Writer) *Encoder {
 }
 
 // Encode writes m to the stream, followed by a newline character.
-func (e *Encoder) Encode(m encoding.TextMarshaler) error {
+func (e *Encoder) Encode(m Message) error {
 	text, err := m.MarshalText()
 	if err != nil {
 		return err

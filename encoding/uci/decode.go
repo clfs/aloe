@@ -7,6 +7,12 @@ import (
 	"io"
 )
 
+// Unmarshal parses the UCI-encoded data and stores the result in the value
+// pointed to by m.
+func Unmarshal(text []byte, m Message) error {
+	return m.UnmarshalText(text)
+}
+
 // Decoder decodes UCI messages from an input stream.
 type Decoder struct {
 	r *bufio.Reader

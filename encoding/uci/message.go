@@ -318,17 +318,3 @@ func (*UCIOk) UnmarshalText(text []byte) error {
 	}
 	return nil
 }
-
-// Unknown represents a message of unknown type.
-type Unknown struct {
-	Text string
-}
-
-func (u *Unknown) MarshalText() ([]byte, error) {
-	return []byte(u.Text), nil
-}
-
-func (u *Unknown) UnmarshalText(text []byte) error {
-	u.Text = string(text)
-	return nil
-}
