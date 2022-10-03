@@ -1,13 +1,8 @@
-// Package uci implements encoding and decoding for Universal Chess Interface
-// (UCI) messages.
 package uci
 
 import (
-	"bufio"
-	"bytes"
 	"encoding"
 	"fmt"
-	"io"
 	"strings"
 )
 
@@ -15,63 +10,6 @@ import (
 type Message interface {
 	encoding.TextMarshaler
 	encoding.TextUnmarshaler
-}
-
-// Encoder encodes UCI messages to an output stream.
-type Encoder struct {
-	w io.Writer
-}
-
-// NewEncoder returns a new encoder that writes to w.
-func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{w: w}
-}
-
-// Encode writes m to the stream, followed by a newline character.
-func (e *Encoder) Encode(m encoding.TextMarshaler) error {
-	text, err := m.MarshalText()
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(e.w, "%s\n", text)
-	return err
-}
-
-// Decoder decodes UCI messages from an input stream.
-type Decoder struct {
-	r *bufio.Reader
-}
-
-// NewDecoder returns a new decoder that reads from r.
-func NewDecoder(r io.Reader) *Decoder {
-	return &Decoder{r: bufio.NewReader(r)}
-}
-
-// Decode reads the next message from its input and stores it in the value
-// pointed to by m.
-func (d *Decoder) Decode(m Message) error {
-	text, err := d.r.ReadBytes('\n')
-	if err != nil {
-		return err
-	}
-	return m.UnmarshalText(text[:len(text)-1])
-}
-
-// Message returns the next UCI message in the input stream. At the end of the
-// input stream, Message returns nil, io.EOF.
-func (d *Decoder) Message() (Message, error) {
-	text, err := d.r.ReadBytes('\n')
-	if err != nil {
-		return nil, err
-	}
-
-	fields := bytes.Fields(text)
-
-	if len(fields) == 0 {
-		return nil, fmt.Errorf("blank message")
-	}
-
-	return nil, io.EOF
 }
 
 // BestMove represents the "bestmove" message.
